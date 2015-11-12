@@ -3,9 +3,6 @@ DELETE        /                                                   @psgr.auth.Aut
 POST          /                                                   @psgr.auth.AuthController.start
 PUT           /                                                   @psgr.auth.AuthController.register
 
-POST          /become/:id                                         @psgr.auth.AuthController.oldBecome(id)
-POST          /become                                             @psgr.auth.AuthController.unbecome
-
 GET           /identities                                         @psgr.auth.IdentitiesController.getAll
 GET           /identities/:identityId                             @psgr.auth.IdentitiesController.get(identityId)
 

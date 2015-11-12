@@ -70,15 +70,6 @@ class AuthController @Inject() (
 
   }
 
-  @deprecated("Use new action switch", "14.10.2015")
-  def oldBecome(profileId: String) = AuthorizedAction(Permission.SwitchUser).async {
-    implicit request ⇒
-      val aid = AuthUserId(profileId)
-      for {
-        r ← authStatusResp(aid)
-      } yield jwtAuthenticator.become(aid, r)
-  }
-
   def unbecome = UserRequiredAction {
     implicit request ⇒
       jwtAuthenticator.unbecome
