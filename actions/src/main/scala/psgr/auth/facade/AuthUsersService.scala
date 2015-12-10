@@ -1,14 +1,11 @@
 package psgr.auth.facade
 
 import psgr.auth.protocol.AuthUserId
-import psgr.expander.protocol.MetaRef
 
 import scala.concurrent.Future
 
 trait AuthUsersService {
   type UserDto
-
-  def toRef(id: AuthUserId): MetaRef[UserDto]
 
   def setEmail(id: AuthUserId, email: String, avatar: Option[String]): Future[AuthUserId]
 

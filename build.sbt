@@ -6,11 +6,9 @@ import scalariform.formatter.preferences._
 
 name := "auth-gather"
 
-val authV = "0.2.4"
+val authV = "0.3.0-SNAPSHOT"
 
 version := authV
-
-val expanderV = "0.3.3"
 
 val reactiveMongoVersion = "0.11.7.play24"
 
@@ -80,7 +78,6 @@ lazy val `auth-protocol` = (project in file("protocol")).settings(commons: _*).s
   name := "auth-protocol",
   version := authV,
   libraryDependencies ++= Seq(
-    "ru.unicorndev" %% "expander-protocol" % expanderV,
     json % Provided
   )
 )

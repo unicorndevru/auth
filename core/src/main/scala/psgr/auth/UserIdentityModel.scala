@@ -4,6 +4,7 @@ import play.api.libs.json.Json
 import psgr.auth.core._
 import psgr.auth.protocol.{ AuthIdentityId, AuthIdentity, AuthUserId }
 import reactivemongo.bson.BSONObjectID
+import scala.language.implicitConversions
 
 case class UserIdentityModel(
   id:         String     = BSONObjectID.generate.stringify,
@@ -80,12 +81,8 @@ object UserIdentityModel {
 
   implicit def modelToProtocol(model: UserIdentityModel): AuthIdentity = AuthIdentity(
     id = model.id,
-    meta = model.id,
     identityId = AuthIdentityId(id = model.identityId.userId, provider = model.identityId.providerId),
     email = model.email,
     isEmailVerified = model.isEmailVerified
   )
-
-  implicit def modelListToProtocolList(list: List[UserIdentityModel]): List[AuthIdentity] =
-    list.map(id ⇒ id: AuthIdentity)
 }

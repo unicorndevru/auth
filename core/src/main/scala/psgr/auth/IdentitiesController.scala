@@ -22,7 +22,6 @@ class IdentitiesController @Inject() (userIdentityService: UserIdentityService) 
     implicit request ⇒
       for {
         list ← userIdentityService.query(IdentityFilter(profileId = request.userIdOpt))
-        protocolList = UserIdentityModel.modelListToProtocolList(list)
-      } yield Ok(Json.toJson(AuthIdentitiesList(items = protocolList)))
+      } yield Ok(Json.toJson(AuthIdentitiesList(items = list.map(l ⇒ l: AuthIdentity))))
   }
 }

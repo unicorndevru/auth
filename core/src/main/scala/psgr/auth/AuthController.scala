@@ -8,7 +8,6 @@ import psgr.auth.actions._
 import psgr.auth.core.services._
 import psgr.auth.facade._
 import psgr.auth.protocol._
-import psgr.expander.protocol.MetaRef
 import psgr.failures.JsonApiFailure
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -49,25 +48,18 @@ class AuthController @Inject() (
     for {
       perms ← authEnv.permissionsService.permissions(pid)
     } yield AuthStatus(
-      user = authUsersService.toRef(pid),
+      user = pid,
       roles = perms.map(_.name).toSeq,
-      isSwitched = Some(isSwitched).filter(identity),
-      identities = AuthIdentitiesList.metaId
+      isSwitched = Some(isSwitched).filter(identity)
     )
   }
 
   def authStatus(pid: AuthUserId)(implicit rh: RequestHeader): Future[AuthStatus] =
     authStatus(pid, jwtAuthenticator.isSwitched)
 
-  def become = AuthorizedAction(Permission.SwitchUser).apply(parse.json) {
+  def become = AuthorizedAction(Permission.SwitchUser).apply(parse.json[SwitchUserCommand]) {
     implicit request ⇒
-      (request.body \ "user").validate[MetaRef[Any]].asOpt match {
-        case Some(metaHref) ⇒
-          jwtAuthenticator.become(AuthUserId(metaHref.meta.href.split("/").last), Ok)
-        case None ⇒
-          JsonApiFailure(BAD_REQUEST, "illegal_argument", "Incorrect json", "global").result
-      }
-
+      jwtAuthenticator.become(request.body.userId, Ok)
   }
 
   def unbecome = UserRequiredAction {

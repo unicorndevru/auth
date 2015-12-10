@@ -1,6 +1,5 @@
 package psgr.auth.core
 
-import play.api.libs.json.{ Json, OFormat }
 import psgr.auth.protocol.AuthUserId
 import reactivemongo.bson._
 
