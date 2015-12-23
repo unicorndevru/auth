@@ -4,7 +4,6 @@ import javax.inject.Inject
 
 import psgr.auth.UserIdentityModel
 import psgr.auth.core.identity.{ AuthenticationMethod, PasswordInfo, IdentityId }
-import psgr.auth.core.AuthenticationMethod
 import psgr.auth.facade.{ AuthMailsService, AuthUsersService }
 import psgr.auth.protocol.{ IdentityFilter, AuthUserId }
 

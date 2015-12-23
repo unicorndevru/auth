@@ -12,6 +12,8 @@ import reactivemongo.extensions.dao.BsonDao
 import reactivemongo.extensions.dsl.BsonDsl._
 
 import scala.concurrent.{ ExecutionContext, Future }
+import ExecutionContext.Implicits.global
+import UserIdentityRecord._
 
 class MongoUserIdentityDao @Inject() (mongoApi: ReactiveMongoApi) extends UserIdentityDAO {
 

@@ -1,6 +1,5 @@
 package psgr.auth.core.identity
 
-import psgr.auth.core.AuthenticationMethod
 import psgr.auth.protocol.AuthUserId
 import reactivemongo.bson._
 

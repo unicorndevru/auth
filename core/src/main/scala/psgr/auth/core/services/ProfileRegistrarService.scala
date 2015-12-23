@@ -2,7 +2,6 @@ package psgr.auth.core.services
 
 import com.google.inject.Inject
 import psgr.auth.UserIdentityModel
-import psgr.auth.core.IdentityId
 import psgr.auth.core.identity.IdentityId
 import psgr.auth.protocol.{ AuthByCredentials, AuthByToken, AuthUserId, AuthorizeCommand }
 

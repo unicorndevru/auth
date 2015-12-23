@@ -6,7 +6,7 @@ import scalariform.formatter.preferences._
 
 name := "auth-gather"
 
-val authV = "0.3.1"
+val authV = "0.3.2"
 
 version := authV
 
