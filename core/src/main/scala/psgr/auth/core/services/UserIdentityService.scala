@@ -5,6 +5,7 @@ import javax.inject.Inject
 import com.google.inject.ImplementedBy
 import psgr.auth.UserIdentityModel
 import psgr.auth.core._
+import psgr.auth.core.identity.{ UserIdentityRecord, IdentityId, UserIdentityDAO }
 import psgr.auth.facade.{ AuthUsersService, CreateUser }
 import psgr.auth.protocol.{ IdentityFilter, AuthUserId }
 import psgr.eventbus.LocalBus
@@ -37,6 +38,7 @@ trait UserIdentityService {
 
   /**
    * Saves identity and creates new user profile for this identity
+   *
    * @param identity identity to create
    * @return saved identity with profileId
    */
@@ -44,6 +46,7 @@ trait UserIdentityService {
 
   /**
    * Updates existed identity. Doesn't create new user profile.
+   *
    * @param identity identity to update
    * @return updated identity
    */

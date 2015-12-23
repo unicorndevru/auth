@@ -1,4 +1,4 @@
-package psgr.auth.core
+package psgr.auth.core.identity
 
 import play.api.libs.json.Json
 

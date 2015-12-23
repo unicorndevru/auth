@@ -4,7 +4,7 @@ import javax.inject.Inject
 
 import play.api.Logger
 import psgr.auth.UserIdentityModel
-import psgr.auth.core.IdentityId
+import psgr.auth.core.identity.IdentityId
 import psgr.auth.facade.AuthMailsService
 import psgr.auth.protocol.{ IdentityFilter, AuthUserId }
 import psgr.failures.JsonApiFailure

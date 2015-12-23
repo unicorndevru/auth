@@ -3,7 +3,8 @@ package psgr.auth.core.services
 import javax.inject.Inject
 
 import psgr.auth.UserIdentityModel
-import psgr.auth.core.{ PasswordInfo, AuthenticationMethod, IdentityId }
+import psgr.auth.core.identity.{ AuthenticationMethod, PasswordInfo, IdentityId }
+import psgr.auth.core.AuthenticationMethod
 import psgr.auth.facade.{ AuthMailsService, AuthUsersService }
 import psgr.auth.protocol.{ IdentityFilter, AuthUserId }
 
@@ -48,6 +49,7 @@ class EmailChangeService @Inject() (
 
   /**
    * Finds if user already has credentials identity and sets password from that identity to new email identity.
+   *
    * @param userId - UserId
    * @return - Option wrpapped into Future
    */

@@ -1,7 +1,7 @@
 package psgr.auth.core.providers
 
 import psgr.auth.UserIdentityModel
-import psgr.auth.core.OAuth2Info
+import psgr.auth.core.identity.OAuth2Info
 import psgr.auth.core.services.UserIdentityService
 import psgr.auth.protocol.{ AuthByToken, AuthUserId, AuthorizeCommand }
 

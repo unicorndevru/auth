@@ -3,9 +3,9 @@ package psgr.auth.core.providers.google
 import javax.inject.Inject
 
 import psgr.auth.UserIdentityModel
+import psgr.auth.core.identity.{ OAuth2Info, IdentityId }
 import psgr.auth.core.providers.OAuth2Provider
 import psgr.auth.core.services.UserIdentityService
-import psgr.auth.core.{ IdentityId, OAuth2Info }
 
 import scala.concurrent.{ ExecutionContext, Future }
 

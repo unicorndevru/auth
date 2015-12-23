@@ -1,8 +1,7 @@
-package psgr.auth.core
+package psgr.auth.core.identity
 
 import javax.inject.Inject
 
-import com.google.inject.ImplementedBy
 import play.modules.reactivemongo.ReactiveMongoApi
 import psgr.auth.protocol.IdentityFilter
 import reactivemongo.api.QueryOpts
@@ -11,28 +10,10 @@ import reactivemongo.api.indexes.{ Index, IndexType }
 import reactivemongo.bson.{ BSONDocument, BSONObjectID }
 import reactivemongo.extensions.dao.BsonDao
 import reactivemongo.extensions.dsl.BsonDsl._
-import UserIdentityRecord._
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ ExecutionContext, Future }
 
-@ImplementedBy(classOf[UserIdentityJsonDao])
-trait UserIdentityDAO {
-
-  def upsert(u: UserIdentityRecord)(implicit ec: ExecutionContext): Future[UserIdentityRecord]
-
-  def get(id: IdentityId)(implicit ec: ExecutionContext): Future[UserIdentityRecord]
-
-  def get(id: String)(implicit ec: ExecutionContext): Future[UserIdentityRecord]
-
-  def delete(u: UserIdentityRecord)(implicit ec: ExecutionContext): Future[Boolean] = delete(u.identityId)
-
-  def delete(id: IdentityId)(implicit ec: ExecutionContext): Future[Boolean]
-
-  def query(filter: IdentityFilter, offset: Int, limit: Int)(implicit ec: ExecutionContext): Future[List[UserIdentityRecord]]
-}
-
-class UserIdentityJsonDao @Inject() (mongoApi: ReactiveMongoApi) extends UserIdentityDAO {
+class MongoUserIdentityDao @Inject() (mongoApi: ReactiveMongoApi) extends UserIdentityDAO {
 
   private object dao extends BsonDao[UserIdentityRecord, BSONObjectID](mongoApi.db, "user.identity") {
     override def autoIndexes = Seq(

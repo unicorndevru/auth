@@ -4,8 +4,8 @@ import javax.inject.Inject
 
 import play.api.libs.json.JsObject
 import play.api.libs.ws.WSClient
+import psgr.auth.core.identity.OAuth2Info
 import psgr.failures.JsonApiFailure
-import psgr.auth.core.OAuth2Info
 
 import scala.concurrent.{ ExecutionContext, Future }
 

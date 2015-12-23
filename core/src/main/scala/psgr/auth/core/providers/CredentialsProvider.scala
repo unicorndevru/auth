@@ -3,7 +3,7 @@ package psgr.auth.core.providers
 import javax.inject.Inject
 
 import psgr.auth.UserIdentityModel
-import psgr.auth.core.IdentityId
+import psgr.auth.core.identity.IdentityId
 import psgr.auth.core.services.{ PasswordHasherService, UserIdentityService }
 import psgr.auth.protocol.{ AuthByCredentials, AuthUserId, AuthorizeCommand }
 import psgr.failures.JsonApiFailure

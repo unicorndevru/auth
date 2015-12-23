@@ -1,8 +1,7 @@
 package psgr.auth.core.services
 
 import javax.inject.Inject
-
-import psgr.auth.core.PasswordInfo
+import psgr.auth.core.identity.PasswordInfo
 import psgr.auth.core.providers.{ PasswordHasher, BCryptPasswordHasher }
 
 class PasswordHasherService @Inject() (bCryptPasswordHasher: BCryptPasswordHasher) {

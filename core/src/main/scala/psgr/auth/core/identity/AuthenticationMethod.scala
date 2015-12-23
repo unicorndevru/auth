@@ -1,4 +1,4 @@
-package psgr.auth.core
+package psgr.auth.core.identity
 
 /**
  * A class representing an authentication method

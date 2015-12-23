@@ -1,4 +1,4 @@
-package psgr.auth.core
+package psgr.auth.core.identity
 
 sealed trait AccessInfo {
   def method: AuthenticationMethod = this match {

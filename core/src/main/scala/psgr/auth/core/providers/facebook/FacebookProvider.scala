@@ -4,6 +4,7 @@ import javax.inject.Inject
 
 import psgr.auth.UserIdentityModel
 import psgr.auth.core._
+import psgr.auth.core.identity.{ OAuth2Info, IdentityId }
 import psgr.auth.core.providers.OAuth2Provider
 import psgr.auth.core.services.UserIdentityService
 

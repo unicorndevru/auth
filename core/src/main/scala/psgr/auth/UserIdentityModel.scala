@@ -2,6 +2,7 @@ package psgr.auth
 
 import play.api.libs.json.Json
 import psgr.auth.core._
+import psgr.auth.core.identity._
 import psgr.auth.protocol.{ AuthIdentityId, AuthIdentity, AuthUserId }
 import reactivemongo.bson.BSONObjectID
 import scala.language.implicitConversions

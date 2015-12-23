@@ -6,11 +6,11 @@ import scalariform.formatter.preferences._
 
 name := "auth-gather"
 
-val authV = "0.3.0"
+val authV = "0.3.1"
 
 version := authV
 
-val reactiveMongoVersion = "0.11.7.play24"
+val reactiveMongoVersion = "0.11.9.play24"
 
 scalaVersion := "2.11.7"
 

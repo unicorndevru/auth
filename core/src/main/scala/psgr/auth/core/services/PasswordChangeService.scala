@@ -3,7 +3,8 @@ package psgr.auth.core.services
 import javax.inject.Inject
 
 import psgr.auth.UserIdentityModel
-import psgr.auth.core.{ AuthenticationMethod, IdentityId, PasswordInfo }
+import psgr.auth.core.identity.{ AuthenticationMethod, PasswordInfo, IdentityId }
+import psgr.auth.core.AuthenticationMethod
 import psgr.auth.protocol.{ IdentityFilter, AuthUserId }
 import psgr.failures.JsonApiFailure
 
