@@ -10,7 +10,7 @@ val authV = "0.3.1"
 
 version := authV
 
-val reactiveMongoVersion = "0.11.9.play24"
+val reactiveMongoVersion = "0.11.9"
 
 scalaVersion := "2.11.7"
 
@@ -49,7 +49,7 @@ lazy val `auth` = (project in file("core")).settings(commons: _*).settings(
   version := authV,
   libraryDependencies ++= Seq(
     "com.github.t3hnar" %% "scala-bcrypt" % "2.4",
-    "org.reactivemongo" %% "reactivemongo-extensions-bson" % reactiveMongoVersion % Provided,
+    "org.reactivemongo" %% "reactivemongo-extensions-bson" % "0.11.7.play24" % Provided,
     "org.reactivemongo" %% "play2-reactivemongo" % reactiveMongoVersion % Provided,
     "ru.unicorndev" %% "eventbus" % "0.2.1",
     ws % Provided,
