@@ -24,11 +24,14 @@ class AuthService(
 
   import emailPasswordServices._
 
-  def authorize(authObject: AuthorizeCommand): Future[Option[AuthUserId]] = {
+  def getStatus(id: AuthUserId): Future[AuthStatus] = Future.successful(AuthStatus(id, Seq.empty, None))
+
+  def authorize(authObject: AuthorizeCommand): Future[Option[AuthStatus]] = {
     for {
       provider ← getProvider(authObject.provider)
       pid ← provider.authorize(authObject)
-    } yield Option(pid)
+      s ← getStatus(pid)
+    } yield Option(s)
   }
 
   def getProvider(id: String): Future[Provider] = providers.find(_.id == id) match {
@@ -36,7 +39,7 @@ class AuthService(
     case _       ⇒ Future.failed(AuthError.ProviderNotFound(id))
   }
 
-  def register(authObject: AuthorizeCommand): Future[AuthUserId] =
+  def register(authObject: AuthorizeCommand): Future[AuthStatus] =
     for {
       id ← authCommandToIdentityId(authObject)
       registered ← isRegistered(id)
@@ -44,7 +47,8 @@ class AuthService(
       userIdentity ← createIdentity(authObject)
       _ = emailVerifierService.sendVerifyingEmail(userIdentity.profileId.get)(userIdentity.email.get)
       Some(uid) = userIdentity.profileId
-    } yield uid
+      s ← getStatus(uid)
+    } yield s
 
   def isRegistered(identityId: IdentityId): Future[Boolean] = {
     userIdentityService.find(identityId).flatMap {

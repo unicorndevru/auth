@@ -9,9 +9,10 @@ import akka.http.scaladsl.testkit.{ RouteTestTimeout, ScalatestRouteTest }
 import auth.api.AuthExceptionHandler
 import auth.core.{ UserIdentityDAO, CreateUser, AuthUsersService, DefaultUserIdentityService }
 import auth.data.identity.{ IdentityId, UserIdentity }
-import auth.protocol.{ IdentitiesFilter, AuthUserId }
+import auth.protocol.{ AuthByCredentials, IdentitiesFilter, AuthUserId }
 import auth.providers.email.{ EmailCredentialsProvider, EmailPasswordServices }
 import auth.services.AuthService
+import de.heikoseeberger.akkahttpcirce.CirceSupport
 import org.junit.runner.RunWith
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest._
@@ -21,9 +22,12 @@ import scala.collection.concurrent.TrieMap
 import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 
+import io.circe._
+import io.circe.generic.auto._
+
 @RunWith(classOf[junit.JUnitRunner])
 class AuthHandlerSpec extends WordSpec with ScalatestRouteTest with Matchers with ScalaFutures with TryValues
-    with OptionValues with BeforeAndAfter {
+    with OptionValues with BeforeAndAfter with CirceSupport {
 
   implicit override val patienceConfig = PatienceConfig(timeout = Span(5, Seconds))
   implicit val routeTimeout = RouteTestTimeout(FiniteDuration(5, TimeUnit.SECONDS))
@@ -76,6 +80,12 @@ class AuthHandlerSpec extends WordSpec with ScalatestRouteTest with Matchers wit
     "return 401" in {
       Get("/auth") ~> route ~> check {
         status should be(StatusCodes.Unauthorized)
+      }
+    }
+
+    "create a user" in {
+      Put("/auth", AuthByCredentials("email", "test@me.com", "123qwe")) ~> route ~> check {
+        status should be(StatusCodes.Created)
       }
     }
   }

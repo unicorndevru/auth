@@ -6,6 +6,8 @@ sealed abstract class AuthError(val code: String, val desc: String, val statusCo
 
 object AuthError {
 
+  object Unauthorized extends AuthError("auth.unauthorized", "Not authenticated", 401)
+
   object WrongPassword extends AuthError("auth.wrongPassword", "Wrong password", 401)
 
   object UserIdNotFound extends AuthError("auth.userIdNotFound", "Corrupted identity", 401)
