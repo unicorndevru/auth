@@ -1,5 +1,4 @@
 import com.typesafe.sbt.SbtScalariform.ScalariformKeys
-
 import sbt.Keys._
 
 import scalariform.formatter.preferences._
@@ -33,7 +32,7 @@ val commons = Seq(
     Resolver.bintrayRepo("alari", "generic")
   ),
   gitHeadCommitSha in ThisBuild := Process("git rev-parse --short HEAD").lines.head,
-  licenses += ("MIT", url("http://opensource.org/licenses/MIT")),
+  licenses +=("MIT", url("http://opensource.org/licenses/MIT")),
   bintrayPackageLabels := Seq("scala", "play", "api"),
   bintrayRepository := "generic"
 ) ++ commonScalariform
@@ -79,6 +78,26 @@ lazy val `auth-protocol` = (project in file("protocol")).settings(commons: _*).s
   version := authV,
   libraryDependencies ++= Seq(
     json % Provided
+  )
+)
+
+val akkaHttpV = "2.0.1"
+
+lazy val `auth-akka` = (project in file("akka")).settings(commons: _*).settings(
+  name := "auth-akka",
+  version := authV,
+  libraryDependencies ++= Seq(
+    // "com.pauldijou" %% "jwt-circe" % "0.4.1",
+    "org.mindrot" % "jbcrypt" % "0.3m",
+    "io.circe" %% "circe-core" % "0.2.1",
+    "io.circe" %% "circe-generic" % "0.2.1",
+    "io.circe" %% "circe-parse" % "0.2.1",
+    "com.typesafe.akka" %% "akka-slf4j" % "2.4.1",
+    "com.typesafe.akka" %% "akka-stream-experimental" % akkaHttpV,
+    "com.typesafe.akka" %% "akka-http-experimental" % akkaHttpV,
+    "de.heikoseeberger" %% "akka-http-circe" % "1.4.1",
+    "org.spire-math" %% "cats-core" % "0.3.0",
+    "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaHttpV % Test
   )
 )
 
