@@ -7,6 +7,8 @@ import auth.protocol.{ IdentitiesFilter, AuthError, AuthUserId }
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
+import io.circe.generic.auto._
+
 class PasswordRecoveryService(
     userIdentityService:   UserIdentityService,
     authMailsService:      AuthMailsService,

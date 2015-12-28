@@ -6,6 +6,8 @@ import auth.protocol.{ IdentitiesFilter, AuthError, AuthUserId }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
+import io.circe.generic.auto._
+
 class EmailVerifierService(
     authMailsService:     AuthMailsService,
     userIdentityService:  UserIdentityService,
