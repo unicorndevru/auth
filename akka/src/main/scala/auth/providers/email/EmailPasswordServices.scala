@@ -1,6 +1,6 @@
 package auth.providers.email
 
-import auth.core.{ AuthMailsService, AuthUsersService, CredentialsCommandCrypto, UserIdentityService }
+import auth.core._
 import auth.providers.email.services.{ EmailChangeService, EmailVerifierService, PasswordChangeService, PasswordRecoveryService }
 import auth.services.GravatarLinkService
 
@@ -9,11 +9,11 @@ import scala.concurrent.ExecutionContext
 class EmailPasswordServices(
     authUsersService:      AuthUsersService,
     userIdentityService:   UserIdentityService,
-    passwordHasherService: PasswordHasherService,
-    authMailsService:      AuthMailsService,
+    passwordHasherService: PasswordHasherService = BCryptPasswordHasherService,
+    authMailsService:      AuthMailsService      = LoggingAuthMailsService,
 
-    commandCryptoService: CredentialsCommandCrypto,
-    gravatarLinkService:  GravatarLinkService
+    commandCryptoService: CredentialsCommandCrypto = Base64UnsafeCommandCrypto,
+    gravatarLinkService:  GravatarLinkService      = GravatarLinkService
 )(implicit ec: ExecutionContext = ExecutionContext.global) {
 
   val emailChangeService = new EmailChangeService(

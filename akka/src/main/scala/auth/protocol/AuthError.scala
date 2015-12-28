@@ -12,6 +12,8 @@ object AuthError {
 
   object WrongAuthObject extends AuthError("auth.wrongAuthorizeObject", "Cannot authorize with provided payload", 401)
 
+  object InvalidCredentials extends AuthError("auth.invalidCredentials", "Credentials you provide are not valid", 401)
+
   object DuplicateIdentities extends AuthError("auth.cannotCreateIdentity", "Cannot create user identity: identity already exists", 409)
 
   object UserHaveNoEmails extends AuthError("auth.userHaveNoEmails", "Cannot perform action: user have no emails", 412)
@@ -20,5 +22,9 @@ object AuthError {
 
   object UserHaveNoPassword extends AuthError("auth.noPasswordIsSet", "Cannot perform action: user have no password identities", 412)
 
+  object UserAlreadyRegistered extends AuthError("auth.userAlreadyRegistered", "User already registered", 409)
+
   object IdentityNotFound extends AuthError("auth.identityNotFound", "Cannot find identity by id", 404)
+
+  case class ProviderNotFound(provider: String) extends AuthError("auth.providerNotFound", s"Cannot find provider $provider", 404)
 }

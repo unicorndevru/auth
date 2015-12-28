@@ -7,7 +7,7 @@ import auth.providers.Provider
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-class EmailCredentialsProvider(service: UserIdentityService, pwdService: PasswordHasherService)(implicit ec: ExecutionContext = ExecutionContext.global) extends Provider {
+class EmailCredentialsProvider(service: UserIdentityService, pwdService: PasswordHasherService = BCryptPasswordHasherService)(implicit ec: ExecutionContext = ExecutionContext.global) extends Provider {
 
   override val id = "email"
 

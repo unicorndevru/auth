@@ -3,23 +3,37 @@ package auth.services
 import auth.core.UserIdentityService
 import auth.data.identity.{ IdentityId, UserIdentity }
 import auth.protocol._
-import auth.providers.email.PasswordHasherService
-import auth.providers.email.services.EmailVerifierService
+import auth.providers.Provider
+import auth.providers.email.{ BCryptPasswordHasherService, EmailPasswordServices, PasswordHasherService }
 
 import scala.concurrent.{ ExecutionContext, Future }
-import scala.language.implicitConversions
 
-class ProfileRegistrarService(
-    userIdentityService:  UserIdentityService,
-    emailVerifierService: EmailVerifierService,
-    pwdService:           PasswordHasherService,
-    gravatarLinkService:  GravatarLinkService
+class AuthService(
+    emailPasswordServices: EmailPasswordServices,
+    userIdentityService:   UserIdentityService,
+    providers:             Set[Provider],
+    pwdService:            PasswordHasherService = BCryptPasswordHasherService,
+    gravatarLinkService:   GravatarLinkService   = GravatarLinkService
 )(implicit ec: ExecutionContext = ExecutionContext.global) {
 
   private def authCommandToIdentityId(authObject: AuthorizeCommand): Future[IdentityId] = authObject match {
     case credentialsObject: AuthByCredentials ⇒ Future.successful(identityIdFromCredentials(credentialsObject))
     case tokenObject: AuthByToken             ⇒ Future.successful(identityIdFromToken(tokenObject))
     case _                                    ⇒ Future.failed(AuthError.WrongAuthObject)
+  }
+
+  import emailPasswordServices._
+
+  def authorize(authObject: AuthorizeCommand): Future[Option[AuthUserId]] = {
+    for {
+      provider ← getProvider(authObject.provider)
+      pid ← provider.authorize(authObject)
+    } yield Option(pid)
+  }
+
+  def getProvider(id: String): Future[Provider] = providers.find(_.id == id) match {
+    case Some(p) ⇒ Future.successful(p)
+    case _       ⇒ Future.failed(AuthError.ProviderNotFound(id))
   }
 
   def register(authObject: AuthorizeCommand): Future[AuthUserId] =
@@ -58,9 +72,7 @@ class ProfileRegistrarService(
         )
       userIdentityService.saveNewIdentityAndCreateNewUser(userIdentity)
 
-    case _ ⇒ Future.failed(
-      new IllegalArgumentException(s"Cannot create identity with profile registrar for provider : ${authObject.provider}, this way isn't supported yet")
-    )
+    case _ ⇒ Future.failed(AuthError.WrongAuthObject)
   }
 
   def isEmailRegistered(email: String): Future[Boolean] =
@@ -76,5 +88,5 @@ class ProfileRegistrarService(
     IdentityId(providerId = token.provider, userId = token.token)
 
   private def registeredPredicate(registered: Boolean) =
-    if (!registered) Future.successful(()) else Future.failed(new IllegalArgumentException("User already registered!"))
+    if (!registered) Future.successful(()) else Future.failed(AuthError.UserAlreadyRegistered)
 }

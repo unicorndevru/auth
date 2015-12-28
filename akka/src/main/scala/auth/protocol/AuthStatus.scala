@@ -1,7 +1,7 @@
 package auth.protocol
 
 case class AuthStatus(
-  user:       AuthUserId,
+  userId:     AuthUserId,
   roles:      Seq[String],
   isSwitched: Option[Boolean]
 )

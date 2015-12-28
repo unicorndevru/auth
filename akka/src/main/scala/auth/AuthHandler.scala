@@ -4,41 +4,38 @@ import akka.http.scaladsl.model.{ HttpEntity, HttpResponse, StatusCodes }
 import akka.http.scaladsl.server.Directives._
 import akka.stream.Materializer
 import auth.api.AuthDirectives
-import auth.protocol.{ AuthByCredentials, AuthByToken, AuthorizeCommand }
+import auth.protocol._
+import auth.services.AuthService
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 import io.circe._
 import io.circe.generic.auto._
-import io.circe.parse._
-import io.circe.syntax._
+import io.circe.generic.semiauto._
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ Future, ExecutionContext }
 
-class AuthHandler(implicit ec: ExecutionContext, mat: Materializer) extends CirceSupport with AuthDirectives {
+class AuthHandler(service: AuthService)(implicit ec: ExecutionContext, mat: Materializer) extends CirceSupport with AuthDirectives {
 
   val NoContent = HttpResponse(StatusCodes.NoContent, entity = HttpEntity.Empty)
+
+  implicit val authStatus: Encoder[AuthStatus] = deriveFor[AuthStatus].encoder
 
   val route =
     pathPrefix("auth") {
       pathEndOrSingleSlash {
-        get {
-          //  authStatusResp(request.userId)
-          complete("???")
+        (get & userRequired) { status ⇒
+          complete(status)
         } ~ (post & entity(as[AuthorizeCommand])) { cmd ⇒
-          /*
-        profileAuthenticator.authorize(request.body).flatMap {
-        case Some(pid) ⇒
-          authStatus(pid, false)
-            .map(_.ok)
-            .map(jwtAuthenticator.authorize(pid))
-        case None ⇒
-          JsonApiFailure(400, "wrong_credentials", "Credentials you provide are not valid", "auth", Some(Json.toJson(request.body))).resultF
-      }
-         */
-          complete("???")
+          complete(service.authorize(cmd).flatMap {
+            case Some(pid) ⇒
+              Future.successful("ok") // TODO: make status, add jwt token
+            case None ⇒
+              Future.failed(AuthError.InvalidCredentials)
+          })
         } ~ delete {
           // jwtAuthenticator.clean(authEnv.unauthorizedResponse(request))
-          complete("???")
+          complete(StatusCodes.Unauthorized → "") // TODO: add body
         } ~ (put & entity(as[AuthorizeCommand])) { cmd ⇒
+          service.register(cmd) // TODO: add status, add jwt token, return 201
           /*
       for {
         pid ← profileRegistrar.register(request.body)
