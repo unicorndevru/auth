@@ -9,7 +9,7 @@ import akka.http.scaladsl.testkit.{ RouteTestTimeout, ScalatestRouteTest }
 import auth.api.AuthExceptionHandler
 import auth.core.{ UserIdentityDAO, CreateUser, AuthUsersService, DefaultUserIdentityService }
 import auth.data.identity.{ IdentityId, UserIdentity }
-import auth.protocol.{ AuthByCredentials, IdentitiesFilter, AuthUserId }
+import auth.protocol._
 import auth.providers.email.{ EmailCredentialsProvider, EmailPasswordServices }
 import auth.services.AuthService
 import de.heikoseeberger.akkahttpcirce.CirceSupport
@@ -33,18 +33,31 @@ class AuthHandlerSpec extends WordSpec with ScalatestRouteTest with Matchers wit
   implicit val routeTimeout = RouteTestTimeout(FiniteDuration(5, TimeUnit.SECONDS))
 
   lazy val authUserService = new AuthUsersService {
-    override def setEmail(id: AuthUserId, email: String, avatar: Option[String]) = ???
+    var users = TrieMap[AuthUserId, CreateUser]()
 
-    override def findEmail(id: AuthUserId) = Future.successful(Some("test@me.com"))
+    var id = 0
 
-    override def create(cmd: CreateUser) = Future.successful(AuthUserId("ok"))
+    override def setEmail(id: AuthUserId, email: String, avatar: Option[String]) = {
+      val u = users(id)
+      users(id) = users(id).copy(email = Some(email))
+      Future.successful(id)
+    }
+
+    override def findEmail(id: AuthUserId) = Future.successful(users.get(id).flatMap(_.email))
+
+    override def create(cmd: CreateUser) = {
+      id += 1
+      val aid = AuthUserId("user-" + id.toString)
+      users += (aid → cmd)
+      Future.successful(aid)
+    }
   }
 
   lazy val userIdentityDao = new UserIdentityDAO {
 
     var identities = TrieMap[String, UserIdentity]()
 
-    override def get(id: IdentityId) = Future.successful(identities.values.find(_.identityId == id).get)
+    override def get(id: IdentityId) = Future(identities.values.find(_.identityId == id).getOrElse(throw AuthError.IdentityNotFound))
 
     override def get(id: String) = Future.successful(identities(id))
 
@@ -84,8 +97,21 @@ class AuthHandlerSpec extends WordSpec with ScalatestRouteTest with Matchers wit
     }
 
     "create a user" in {
-      Put("/auth", AuthByCredentials("email", "test@me.com", "123qwe")) ~> route ~> check {
+      val cr = AuthByCredentials("email", "test@me.com", "123qwe")
+
+      val Some(t) = Put("/auth", cr) ~> route ~> check {
         status should be(StatusCodes.Created)
+        header("Authorization")
+      }
+
+      val st = Get("/auth").withHeaders(t) ~> route ~> check {
+        status should be(StatusCodes.OK)
+        responseAs[AuthStatus]
+      }
+
+      Post("/auth", cr) ~> route ~> check {
+        status should be(StatusCodes.OK)
+        responseAs[AuthStatus] should be(st)
       }
     }
   }
