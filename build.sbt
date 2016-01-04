@@ -83,15 +83,17 @@ lazy val `auth-protocol` = (project in file("protocol")).settings(commons: _*).s
 
 val akkaHttpV = "2.0.1"
 
+val circeV = "0.2.1"
+
 lazy val `auth-akka` = (project in file("akka")).settings(commons: _*).settings(
   name := "auth-akka",
   version := authV,
   libraryDependencies ++= Seq(
-    // "com.pauldijou" %% "jwt-circe" % "0.4.1",
+    "com.pauldijou" %% "jwt-circe" % "0.5.0",
     "org.mindrot" % "jbcrypt" % "0.3m",
-    "io.circe" %% "circe-core" % "0.2.1",
-    "io.circe" %% "circe-generic" % "0.2.1",
-    "io.circe" %% "circe-parse" % "0.2.1",
+    "io.circe" %% "circe-core" % circeV,
+    "io.circe" %% "circe-generic" % circeV,
+    "io.circe" %% "circe-parse" % circeV,
     "com.typesafe.akka" %% "akka-slf4j" % "2.4.1",
     "com.typesafe.akka" %% "akka-stream-experimental" % akkaHttpV,
     "com.typesafe.akka" %% "akka-http-experimental" % akkaHttpV,
