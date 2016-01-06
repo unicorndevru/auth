@@ -6,12 +6,13 @@ import akka.stream.Materializer
 import auth.api.{ AuthCirceDecoders, AuthCirceEncoders, AuthDirectives, AuthParams }
 import auth.core.UserIdentityService
 import auth.protocol._
+import auth.providers.email.EmailPasswordServices
 import auth.services.AuthService
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 
 import scala.concurrent.ExecutionContext
 
-class AuthHandler(service: AuthService, userIdentityService: UserIdentityService, override val authParams: AuthParams)(implicit ec: ExecutionContext, mat: Materializer) extends CirceSupport with AuthDirectives with AuthCirceEncoders with AuthCirceDecoders {
+class AuthHandler(service: AuthService, emailPasswordServices: EmailPasswordServices, userIdentityService: UserIdentityService, override val authParams: AuthParams)(implicit ec: ExecutionContext, mat: Materializer) extends CirceSupport with AuthDirectives with AuthCirceEncoders with AuthCirceDecoders {
 
   def authorize(cmd: AuthorizeCommand) =
     onSuccess(service.authorize(cmd)) {
@@ -45,7 +46,7 @@ class AuthHandler(service: AuthService, userIdentityService: UserIdentityService
         } ~ put {
           entity(as[AuthByToken])(register) ~ entity(as[AuthByCredentials])(register)
         }
-      } ~ new IdentitiesHandler(userIdentityService, authParams).route ~ new AuthActionsHandler(service, authParams).route
+      } ~ new IdentitiesHandler(userIdentityService, authParams).route ~ new AuthActionsHandler(service, emailPasswordServices, authParams).route
     }
 
 }

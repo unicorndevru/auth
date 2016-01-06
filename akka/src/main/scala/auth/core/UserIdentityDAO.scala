@@ -16,5 +16,6 @@ trait UserIdentityDAO {
 
   def delete(id: IdentityId): Future[Boolean]
 
+  // Should return ALL identities if limit <= 0
   def query(filter: IdentitiesFilter, offset: Int, limit: Int): Future[List[UserIdentity]]
 }

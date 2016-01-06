@@ -25,8 +25,7 @@ class PasswordChangeService(userIdentityService: UserIdentityService, passwordHa
         idsWithPassword
           .foldLeft(false)((b, identity) ⇒ b || checkPassword(identity, oldPass)) match {
             case true ⇒
-              idsWithPassword.foreach(setNewPassword(_, newPass))
-              Future.successful(idsWithPassword)
+              Future.traverse(idsWithPassword)(setNewPassword(_, newPass))
             case false ⇒
               Future.failed(AuthError.WrongPassword)
           }

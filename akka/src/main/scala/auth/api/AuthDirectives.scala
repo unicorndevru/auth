@@ -5,8 +5,8 @@ import java.time.Instant
 import akka.http.scaladsl.model.headers.{ Authorization, OAuth2BearerToken }
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.directives.Credentials
-import akka.http.scaladsl.server.{ Directive0, Directive1 }
-import auth.protocol.{ AuthError, AuthStatus, AuthUserId }
+import akka.http.scaladsl.server.{ AuthorizationFailedRejection, Directive0, Directive1 }
+import auth.protocol.{ AuthStatus, AuthUserId }
 import auth.services.AuthService
 import io.circe._
 import io.circe.generic.semiauto._
@@ -80,7 +80,7 @@ trait AuthDirectives {
     if (rs.forall(rs.contains)) {
       provide(s)
     } else {
-      failWith(AuthError.Forbidden)
+      reject(AuthorizationFailedRejection)
     }
 
   def rolesRequired(rs: String*): Directive1[AuthStatus] = userRequired.flatMap { s ⇒
@@ -115,10 +115,11 @@ trait AuthPermissionsDirectives extends AuthDirectives {
   def permissionsRequired(s: AuthStatus, ps: String*): Directive1[AuthStatus] =
     onSuccess(Future.traverse(s.roles)(authService.getRolePermissions)).flatMap { cps ⇒
       val cs = cps.flatten.toSet
+
       if (ps.forall(cs.contains)) {
         provide(s)
       } else {
-        failWith(AuthError.Forbidden)
+        reject(AuthorizationFailedRejection)
       }
     }
 

@@ -41,7 +41,7 @@ class AuthHandlerSpec extends WordSpec with ScalatestRouteTest with Matchers wit
 
   implicit val exceptionHandler = AuthExceptionHandler.generic
 
-  lazy val route = Route.seal(new AuthHandler(service, userIdentityService, AuthParams(secretKey = "changeme")).route)
+  lazy val route = Route.seal(new AuthHandler(service, emailPasswordServices, userIdentityService, AuthParams(secretKey = "changeme")).route)
 
   "auth handler" should {
     "return 401" in {
@@ -56,6 +56,10 @@ class AuthHandlerSpec extends WordSpec with ScalatestRouteTest with Matchers wit
       val Some(t) = Put("/auth", cr) ~> route ~> check {
         status should be(StatusCodes.Created)
         header("Authorization")
+      }
+
+      Put("/auth", cr) ~> route ~> check {
+        status should be(StatusCodes.Conflict)
       }
 
       val st = Get("/auth").withHeaders(t) ~> route ~> check {
@@ -101,6 +105,42 @@ class AuthHandlerSpec extends WordSpec with ScalatestRouteTest with Matchers wit
         status should be(StatusCodes.OK)
         responseAs[AuthStatus].roles should contain("switch")
         responseAs[AuthStatus].originUserId should be('empty)
+      }
+    }
+
+    "change password" in {
+      val cr = AuthByCredentials("email", "test3@me.com", "123qwe")
+
+      val Some(t) = Put("/auth", cr) ~> route ~> check {
+        status should be(StatusCodes.Created)
+        header("Authorization")
+      }
+
+      val st = Get("/auth").withHeaders(t) ~> route ~> check {
+        status should be(StatusCodes.OK)
+        responseAs[AuthStatus]
+      }
+
+      Post("/auth", cr) ~> route ~> check {
+        status should be(StatusCodes.OK)
+        responseAs[AuthStatus] should be(st)
+        header("Authorization") should be('defined)
+      }
+
+      Post("/auth/actions/changePassword", PasswordChange(Some("123qwe"), "321ewq")).withHeaders(t) ~> route ~> check {
+        status should be(StatusCodes.OK)
+        responseAs[AuthStatus] should be(st)
+      }
+
+      Post("/auth", cr) ~> route ~> check {
+        status should be(StatusCodes.Unauthorized)
+        header("Authorization") should be('empty)
+      }
+
+      Post("/auth", cr.copy(password = "321ewq")) ~> route ~> check {
+        status should be(StatusCodes.OK)
+        responseAs[AuthStatus] should be(st)
+        header("Authorization") should be('defined)
       }
     }
   }
