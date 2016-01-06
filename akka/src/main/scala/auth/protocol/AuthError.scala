@@ -8,6 +8,8 @@ object AuthError {
 
   object Unauthorized extends AuthError("auth.unauthorized", "Not authenticated", 401)
 
+  object Forbidden extends AuthError("auth.forbidden", "Forbidden", 403)
+
   object WrongPassword extends AuthError("auth.wrongPassword", "Wrong password", 401)
 
   object UserIdNotFound extends AuthError("auth.userIdNotFound", "Corrupted identity", 401)

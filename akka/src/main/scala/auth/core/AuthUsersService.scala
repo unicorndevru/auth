@@ -10,6 +10,10 @@ trait AuthUsersService {
   def create(cmd: CreateUser): Future[AuthUserId]
 
   def findEmail(id: AuthUserId): Future[Option[String]]
+
+  def getRoles(id: AuthUserId): Future[Seq[String]]
+
+  def getRolePermissions(role: String): Future[Seq[String]] = Future.successful(Seq(role))
 }
 
 case class CreateUser(

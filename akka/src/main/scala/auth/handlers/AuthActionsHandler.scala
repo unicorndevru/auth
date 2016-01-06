@@ -1,100 +1,50 @@
-package auth
+package auth.handlers
 
-import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.server.Directives._
 import akka.stream.Materializer
-import auth.api.{ AuthCirceDecoders, AuthCirceEncoders, AuthDirectives }
-import auth.core.UserIdentityService
-import auth.data.identity.UserIdentity
-import auth.protocol._
+import auth.api._
+import auth.protocol.SwitchUserCommand
 import auth.services.AuthService
 import de.heikoseeberger.akkahttpcirce.CirceSupport
+import akka.http.scaladsl.server.Directives._
 
-import scala.concurrent.{ ExecutionContext, Future }
+import scala.concurrent.ExecutionContext
 
-class AuthHandler(service: AuthService)(implicit ec: ExecutionContext, mat: Materializer) extends CirceSupport with AuthDirectives with AuthCirceEncoders with AuthCirceDecoders {
+class AuthActionsHandler(service: AuthService, override val authParams: AuthParams)(implicit ec: ExecutionContext, mat: Materializer) extends CirceSupport with AuthPermissionsDirectives with AuthCirceEncoders with AuthCirceDecoders {
 
-  def authorize(cmd: AuthorizeCommand) =
-    onSuccess(service.authorize(cmd)) {
-      case Some(s) ⇒
-        respondWithAuth(s) {
-          complete(s)
-        }
-      case None ⇒
-        failWith(AuthError.InvalidCredentials)
-    }
-
-  def register(cmd: AuthorizeCommand) =
-    onSuccess(service.register(cmd)) { s ⇒
-      respondWithAuth(s) {
-        complete(StatusCodes.Created → s)
-      }
-    }
-
-  val route =
-    pathPrefix("auth") {
-      pathEndOrSingleSlash {
-        (get & userRequired) { status ⇒
-          complete(status)
-
-        } ~ post {
-          entity(as[AuthByToken])(authorize) ~ entity(as[AuthByCredentials])(authorize)
-
-        } ~ delete {
-          failWith(AuthError.Unauthorized)
-
-        } ~ put {
-          entity(as[AuthByToken])(register) ~ entity(as[AuthByCredentials])(register)
-        }
-      }
-    }
-
-}
-
-class IdentitiesHandler(service: UserIdentityService)(implicit ec: ExecutionContext, mat: Materializer) extends CirceSupport with AuthDirectives with AuthCirceEncoders with AuthCirceDecoders {
-
-  def identityToProtocol(i: UserIdentity): AuthIdentity =
-    AuthIdentity(
-      id = i._id.get,
-      identityId = AuthIdentityId(id = i.identityId.userId, provider = i.identityId.providerId),
-      email = i.email,
-      isEmailVerified = i.isEmailVerified
-    )
-
-  val route =
-    (pathPrefix("identities") & userRequired) { status ⇒
-      (get & pathEndOrSingleSlash) {
-        val f = IdentitiesFilter(profileId = Some(status.userId))
-        complete(service.query(f).map(is ⇒ AuthIdentitiesList(f, is.map(identityToProtocol))))
-      } ~ (get & path(Segment)) { id ⇒
-        complete(service.get(id).flatMap { ui ⇒
-          if (ui.profileId.contains(status.userId)) {
-            Future.successful(identityToProtocol(ui))
-          } else {
-            Future.failed(AuthError.IdentityNotFound)
-          }
-        })
-      }
-    }
-
-}
-
-class AuthActionsHandler()(implicit ec: ExecutionContext, mat: Materializer) extends CirceSupport with AuthDirectives with AuthCirceEncoders with AuthCirceDecoders {
+  override val authService = service
 
   val route =
     pathPrefix("actions") {
-      path("switch") {
-        post {
-          /*
-          AuthorizedAction(Permission.SwitchUser).apply(parse.json[SwitchUserCommand]) {
-    implicit request ⇒
-      jwtAuthenticator.become(request.body.userId, Ok)
-  }
-           */
-          complete("???")
+      (path("switch") & userRequired) { status ⇒
+        (post & entity(as[SwitchUserCommand])) { cmd ⇒
+          cmd.userId match {
+            case id if id == status.userId ⇒
+              respondWithAuth(status)(complete(status))
+
+            case id if status.originUserId.contains(id) ⇒
+              // always allow
+              onSuccess(service.getStatus(id)){ s ⇒
+                respondWithAuth(s)(complete(s))
+              }
+
+            case id ⇒
+              permissionsRequired(status, "switch") { _ ⇒
+                onSuccess(service.getStatus(id)){ s ⇒
+                  val st = s.copy(originUserId = status.originUserId orElse Some(status.userId))
+                  respondWithAuth(s)(complete(s))
+                }
+              }
+          }
         } ~ delete {
-          // jwtAuthenticator.unbecome
-          complete("???")
+          status.originUserId match {
+            case Some(o) ⇒
+              onSuccess(service.getStatus(o)){ s ⇒
+                respondWithAuth(s)(complete(s))
+              }
+
+            case None ⇒
+              complete(status)
+          }
         }
       } ~ post {
         path ("changePassword") {

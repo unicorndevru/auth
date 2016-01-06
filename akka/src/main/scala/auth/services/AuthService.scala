@@ -1,6 +1,6 @@
 package auth.services
 
-import auth.core.UserIdentityService
+import auth.core.{ AuthUsersService, UserIdentityService }
 import auth.data.identity.{ IdentityId, UserIdentity }
 import auth.protocol._
 import auth.providers.Provider
@@ -9,6 +9,7 @@ import auth.providers.email.{ BCryptPasswordHasherService, EmailPasswordServices
 import scala.concurrent.{ ExecutionContext, Future }
 
 class AuthService(
+    service:               AuthUsersService,
     emailPasswordServices: EmailPasswordServices,
     userIdentityService:   UserIdentityService,
     providers:             Set[Provider],
@@ -24,7 +25,10 @@ class AuthService(
 
   import emailPasswordServices._
 
-  def getStatus(id: AuthUserId): Future[AuthStatus] = Future.successful(AuthStatus(id, Seq.empty, None))
+  def getRolePermissions(role: String): Future[Seq[String]] = service.getRolePermissions(role)
+
+  def getStatus(id: AuthUserId): Future[AuthStatus] =
+    service.getRoles(id).map(rs ⇒ AuthStatus(id, rs, None))
 
   def authorize(authObject: AuthorizeCommand): Future[Option[AuthStatus]] = {
     for {
