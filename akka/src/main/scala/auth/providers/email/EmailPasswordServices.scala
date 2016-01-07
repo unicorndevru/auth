@@ -7,13 +7,14 @@ import auth.services.GravatarLinkService
 import scala.concurrent.ExecutionContext
 
 class EmailPasswordServices(
-    authUsersService:      AuthUsersService,
-    userIdentityService:   UserIdentityService,
+    authUsersService:     AuthUsersService,
+    userIdentityService:  UserIdentityService,
+    commandCryptoService: CredentialsCommandCrypto,
+
     passwordHasherService: PasswordHasherService = BCryptPasswordHasherService,
     authMailsService:      AuthMailsService      = LoggingAuthMailsService,
 
-    commandCryptoService: CredentialsCommandCrypto = Base64UnsafeCommandCrypto,
-    gravatarLinkService:  GravatarLinkService      = GravatarLinkService
+    gravatarLinkService: GravatarLinkService = GravatarLinkService
 )(implicit ec: ExecutionContext = ExecutionContext.global) {
 
   val emailChangeService = new EmailChangeService(

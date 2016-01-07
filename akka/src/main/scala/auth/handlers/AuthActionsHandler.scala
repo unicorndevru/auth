@@ -1,5 +1,7 @@
 package auth.handlers
 
+import akka.http.javadsl.model.ResponseEntity
+import akka.http.scaladsl.model.{ ContentTypes, HttpEntity, StatusCodes }
 import akka.stream.Materializer
 import auth.api._
 import auth.protocol.{ PasswordChange, SwitchUserCommand }
@@ -101,15 +103,11 @@ class AuthActionsHandler(service: AuthService, emailPasswordServices: EmailPassw
   }
            */
           complete("???")
-        } ~ path ("requestEmailVerify") {
-          /*
-          UserRequiredAction.apply {
-    implicit request ⇒
-      emailVerifierService.startVerify(request.userId)
-      NoContent
-  }
-           */
-          complete("???")
+        } ~ (path ("requestEmailVerify") & userRequired) { s ⇒
+          complete(
+            emailVerifierService.startVerify(s.userId)
+              .map(_ ⇒ StatusCodes.NoContent → HttpEntity.empty(ContentTypes.NoContentType))
+          )
         } ~ path ("checkEmailAvailability") {
           /*
           Action.async(authBodyJson[EmailCheckAvailability]) {

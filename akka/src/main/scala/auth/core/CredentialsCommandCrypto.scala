@@ -3,6 +3,8 @@ package auth.core
 import io.circe._
 import io.circe.parse._
 import io.circe.syntax._
+import pdi.jwt.algorithms.JwtHmacAlgorithm
+import pdi.jwt.{ JwtAlgorithm, JwtCirce }
 
 import scala.util.{ Failure, Success, Try }
 
@@ -24,4 +26,12 @@ object Base64UnsafeCommandCrypto extends CredentialsCommandCrypto {
   override def encrypt[T: Encoder](cmd: T) = base64encode(cmd.asJson.noSpaces)
 
   override def decrypt[T: Decoder](s: String) = decode[T](base64decode(s)).fold(Failure(_), Success(_))
+}
+
+class JwtCommandCrypto(val key: String, val algo: JwtHmacAlgorithm = JwtAlgorithm.HS256) extends CredentialsCommandCrypto {
+
+  override def encrypt[T: Encoder](cmd: T) = JwtCirce.encode(cmd.asJson, key, algo)
+
+  override def decrypt[T: Decoder](s: String) = JwtCirce.decodeJson(s, key, Seq(algo)).flatMap(_.as[T].fold(Failure(_), Success(_)))
+
 }

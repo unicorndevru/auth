@@ -6,7 +6,7 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.{ RouteTestTimeout, ScalatestRouteTest }
 import auth.api.{ AuthParams, AuthExceptionHandler }
-import auth.core.DefaultUserIdentityService
+import auth.core.{ JwtCommandCrypto, DefaultUserIdentityService }
 import auth.handlers.AuthHandler
 import auth.protocol._
 import auth.providers.email.{ EmailCredentialsProvider, EmailPasswordServices }
@@ -35,7 +35,7 @@ class AuthHandlerSpec extends WordSpec with ScalatestRouteTest with Matchers wit
 
   lazy val userIdentityService = new DefaultUserIdentityService(userIdentityDao, authUserService)
 
-  lazy val emailPasswordServices = new EmailPasswordServices(authUserService, userIdentityService)
+  lazy val emailPasswordServices = new EmailPasswordServices(authUserService, userIdentityService, new JwtCommandCrypto("changeme"))
 
   lazy val service = new AuthService(authUserService, emailPasswordServices, userIdentityService, Set(new EmailCredentialsProvider(userIdentityService)))
 
