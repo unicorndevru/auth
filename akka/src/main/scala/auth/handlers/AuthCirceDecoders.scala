@@ -1,9 +1,7 @@
-package auth.api
+package auth.handlers
 
-import auth.protocol.{ PasswordChange, SwitchUserCommand, AuthByCredentials, AuthByToken }
+import auth.protocol.{AuthByCredentials, AuthByToken, PasswordChange, SwitchUserCommand}
 import io.circe._
-import io.circe.syntax._
-import io.circe.generic.auto._
 import io.circe.generic.semiauto._
 
 trait AuthCirceDecoders {

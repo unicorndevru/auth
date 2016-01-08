@@ -2,7 +2,7 @@ package auth.handlers
 
 import akka.http.scaladsl.server.Directives._
 import akka.stream.Materializer
-import auth.api.{ AuthCirceDecoders, AuthCirceEncoders, AuthDirectives, AuthParams }
+import auth.api.{ AuthDirectives, AuthParams }
 import auth.core.UserIdentityService
 import auth.data.identity.UserIdentity
 import auth.protocol._

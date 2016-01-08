@@ -99,7 +99,6 @@ lazy val `auth-akka` = (project in file("akka")).settings(commons: _*).settings(
     "com.typesafe.akka" %% "akka-http-experimental" % akkaHttpV,
     "de.heikoseeberger" %% "akka-http-circe" % "1.4.1",
     "org.spire-math" %% "cats-core" % "0.3.0",
-    "com.iheart" %% "ficus" % "1.2.1",
     "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaHttpV % Test,
     "org.scalatest" %% "scalatest" % "2.2.5" % Test,
     "junit" % "junit" % "4.12" % Test

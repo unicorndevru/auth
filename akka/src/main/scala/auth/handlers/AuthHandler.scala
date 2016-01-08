@@ -3,7 +3,7 @@ package auth.handlers
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.stream.Materializer
-import auth.api.{ AuthCirceDecoders, AuthCirceEncoders, AuthDirectives, AuthParams }
+import auth.api.{ AuthDirectives, AuthParams }
 import auth.core.UserIdentityService
 import auth.protocol._
 import auth.providers.email.EmailPasswordServices
