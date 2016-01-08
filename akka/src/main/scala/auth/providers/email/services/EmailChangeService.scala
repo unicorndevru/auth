@@ -2,7 +2,8 @@ package auth.providers.email.services
 
 import auth.api._
 import auth.data.identity._
-import auth.protocol.{ IdentitiesFilter, AuthUserId }
+import auth.protocol.AuthUserId
+import auth.protocol.identities.UserIdentitiesFilter
 import auth.providers.email.PasswordHasherService
 import auth.services.GravatarLinkService
 
@@ -14,7 +15,7 @@ import io.circe.generic.auto._
 
 class EmailChangeService(
     authUsersService:      AuthUsersService,
-    userIdentityService:   UserIdentityService,
+    userIdentityService:   UserIdentitiesService,
     gravatarLinkService:   GravatarLinkService,
     passwordHasherService: PasswordHasherService,
     commandCryptoService:  CredentialsCommandCrypto,
@@ -35,7 +36,7 @@ class EmailChangeService(
       isEmailVerified = Some(true),
       authMethod = AuthenticationMethod.UserPassword,
       passwordInfo = Some(passwordHasherService.createPasswordInfo(randomString)),
-      profileId = Some(userId),
+      userId = Some(userId),
       avatarUrl = newAvatarUrl
     )
     findOldPassword(userId).flatMap {
@@ -56,7 +57,7 @@ class EmailChangeService(
 
   private def findOldPassword(userId: AuthUserId): Future[Option[PasswordInfo]] = {
     userIdentityService
-      .query(IdentitiesFilter(profileId = Option(userId)))
+      .queryAll(UserIdentitiesFilter(userId = Option(userId)))
       .map { list ⇒
         list
           .filter(_.passwordInfo.isDefined)
@@ -71,7 +72,7 @@ class EmailChangeService(
   private def saveNewEmailIdentity(identity: UserIdentity): Future[AuthUserId] =
     for {
       identity ← userIdentityService.saveNewIdentity(identity)
-      userId ← authUsersService.setEmail(identity.profileId.get, identity.email.get, identity.avatarUrl)
+      userId ← authUsersService.setEmail(identity.userId.get, identity.email.get, identity.avatarUrl)
     } yield userId
 
   private def generateHash(newEmail: String, userId: AuthUserId): String = {

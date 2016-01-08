@@ -1,20 +1,20 @@
 package auth.services
 
-import auth.api.{ AuthUsersService, UserIdentityService }
+import auth.api.{ AuthUsersService, UserIdentitiesService }
 import auth.data.identity.{ IdentityId, UserIdentity }
 import auth.protocol._
 import auth.providers.Provider
-import auth.providers.email.{ BCryptPasswordHasherService, EmailPasswordServices, PasswordHasherService }
+import auth.providers.email.{ EmailPasswordServices, PasswordHasherService }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
 class AuthService(
     service:               AuthUsersService,
     emailPasswordServices: EmailPasswordServices,
-    userIdentityService:   UserIdentityService,
+    userIdentityService:   UserIdentitiesService,
     providers:             Set[Provider],
-    pwdService:            PasswordHasherService = BCryptPasswordHasherService,
-    gravatarLinkService:   GravatarLinkService   = GravatarLinkService
+    pwdService:            PasswordHasherService,
+    gravatarLinkService:   GravatarLinkService
 )(implicit ec: ExecutionContext = ExecutionContext.global) {
 
   private def authCommandToIdentityId(authObject: AuthorizeCommand): Future[IdentityId] = authObject match {
@@ -49,8 +49,8 @@ class AuthService(
       registered ← isRegistered(id)
       _ ← registeredPredicate(registered)
       userIdentity ← createIdentity(authObject)
-      _ = emailVerifierService.sendVerifyingEmail(userIdentity.profileId.get)(userIdentity.email.get)
-      Some(uid) = userIdentity.profileId
+      _ = emailVerifierService.sendVerifyingEmail(userIdentity.userId.get)(userIdentity.email.get)
+      Some(uid) = userIdentity.userId
       s ← getStatus(uid)
     } yield s
 

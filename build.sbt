@@ -5,7 +5,7 @@ import scalariform.formatter.preferences._
 
 name := "auth-gather"
 
-val authV = "0.3.2"
+val authV = "0.4.0"
 
 version := authV
 
@@ -98,12 +98,31 @@ lazy val `auth-akka` = (project in file("akka")).settings(commons: _*).settings(
     "com.typesafe.akka" %% "akka-stream-experimental" % akkaHttpV,
     "com.typesafe.akka" %% "akka-http-experimental" % akkaHttpV,
     "de.heikoseeberger" %% "akka-http-circe" % "1.4.1",
-    "org.spire-math" %% "cats-core" % "0.3.0",
-    "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaHttpV % Test,
-    "org.scalatest" %% "scalatest" % "2.2.5" % Test,
-    "junit" % "junit" % "4.12" % Test
+    "org.spire-math" %% "cats-core" % "0.3.0"
   )
 )
+
+lazy val `auth-mongo` = (project in file("auth-mongo")).settings(commons: _*).settings(
+  name := "auth-mongo",
+  version := authV + "." + gitHeadCommitSha.value,
+  libraryDependencies ++= Seq(
+    "org.reactivemongo" %% "reactivemongo" % reactiveMongoVersion % Provided,
+    "org.reactivemongo" %% "reactivemongo-extensions-bson" % "0.11.7.play24" % Provided
+  )
+).dependsOn(`auth-akka`).aggregate(`auth-akka`)
+
+lazy val `auth-testkit` = (project in file("auth-testkit")).settings(commons: _*).settings(
+  name := "auth-testkit",
+  version := authV + "." + gitHeadCommitSha.value,
+  libraryDependencies ++= Seq(
+    "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaHttpV,
+    "org.scalatest" %% "scalatest" % "2.2.5",
+    "junit" % "junit" % "4.12",
+    "de.flapdoodle.embed" % "de.flapdoodle.embed.mongo" % "1.50.1" % Test,
+    "org.reactivemongo" %% "reactivemongo" % reactiveMongoVersion % Test,
+    "org.reactivemongo" %% "reactivemongo-extensions-bson" % "0.11.7.play24" % Test
+  )
+).dependsOn(`auth-akka`, `auth-mongo`).aggregate(`auth-akka`, `auth-mongo`)
 
 resolvers += Resolver.sonatypeRepo("releases")
 

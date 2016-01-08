@@ -1,4 +1,4 @@
-package auth.protocol
+package auth.protocol.identities
 
 case class AuthIdentity(
   id:              String,

@@ -1,13 +1,14 @@
 package auth.providers.email.services
 
-import auth.api.UserIdentityService
+import auth.api.UserIdentitiesService
 import auth.data.identity._
-import auth.protocol.{ IdentitiesFilter, AuthError, AuthUserId }
+import auth.protocol.identities.UserIdentitiesFilter
+import auth.protocol.{ AuthError, AuthUserId }
 import auth.providers.email.PasswordHasherService
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-class PasswordChangeService(userIdentityService: UserIdentityService, passwordHasherService: PasswordHasherService)(implicit ec: ExecutionContext = ExecutionContext.global) {
+class PasswordChangeService(userIdentityService: UserIdentitiesService, passwordHasherService: PasswordHasherService)(implicit ec: ExecutionContext = ExecutionContext.global) {
 
   /**
    * Changing password with all requirements. Checks old pass. Creates new credentials identity if user doesn't have credentials identity yet.
@@ -19,7 +20,7 @@ class PasswordChangeService(userIdentityService: UserIdentityService, passwordHa
    */
   def changePassword(userId: AuthUserId, oldPass: String, newPass: String): Future[List[UserIdentity]] = {
     userIdentityService
-      .query(IdentitiesFilter(profileId = Option(userId)))
+      .queryAll(UserIdentitiesFilter(userId = Option(userId)))
       .flatMap { list ⇒
         val idsWithPassword = list.filter(_.passwordInfo.isDefined)
         idsWithPassword

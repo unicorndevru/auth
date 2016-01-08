@@ -8,13 +8,13 @@ import scala.concurrent.ExecutionContext
 
 class EmailPasswordServices(
     authUsersService:     AuthUsersService,
-    userIdentityService:  UserIdentityService,
+    userIdentityService:  UserIdentitiesService,
     commandCryptoService: CredentialsCommandCrypto,
 
-    passwordHasherService: PasswordHasherService = BCryptPasswordHasherService,
-    authMailsService:      AuthMailsService      = LoggingAuthMailsService,
+    passwordHasherService: PasswordHasherService,
+    authMailsService:      AuthMailsService,
 
-    gravatarLinkService: GravatarLinkService = GravatarLinkService
+    gravatarLinkService: GravatarLinkService
 )(implicit ec: ExecutionContext = ExecutionContext.global) {
 
   val emailChangeService = new EmailChangeService(

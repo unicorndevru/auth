@@ -1,6 +1,7 @@
 package auth.handlers
 
-import auth.protocol.{ AuthIdentitiesList, AuthIdentity, AuthStatus }
+import auth.protocol.identities.{ AuthIdentity, AuthIdentitiesList }
+import auth.protocol.AuthStatus
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.generic.semiauto._

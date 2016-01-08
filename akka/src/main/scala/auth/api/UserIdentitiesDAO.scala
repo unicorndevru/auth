@@ -1,11 +1,11 @@
 package auth.api
 
 import auth.data.identity.{ IdentityId, UserIdentity }
-import auth.protocol.IdentitiesFilter
+import auth.protocol.identities.UserIdentitiesFilter
 
 import scala.concurrent.Future
 
-trait UserIdentityDAO {
+trait UserIdentitiesDao {
   def upsert(u: UserIdentity): Future[UserIdentity]
 
   def get(id: IdentityId): Future[UserIdentity]
@@ -16,6 +16,7 @@ trait UserIdentityDAO {
 
   def delete(id: IdentityId): Future[Boolean]
 
-  // Should return ALL identities if limit <= 0
-  def query(filter: IdentitiesFilter, offset: Int, limit: Int): Future[List[UserIdentity]]
+  def query(filter: UserIdentitiesFilter, offset: Int, limit: Int): Future[List[UserIdentity]]
+
+  def queryAll(filter: UserIdentitiesFilter): Future[List[UserIdentity]]
 }

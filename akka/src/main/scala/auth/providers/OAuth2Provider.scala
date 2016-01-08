@@ -1,13 +1,13 @@
 package auth.providers
 
-import auth.api.UserIdentityService
+import auth.api.UserIdentitiesService
 import auth.data.identity.{ OAuth2Info, UserIdentity }
 import auth.protocol.{ AuthByToken, AuthError, AuthUserId, AuthorizeCommand }
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.language.implicitConversions
 
-abstract class OAuth2Provider(service: UserIdentityService)(implicit ec: ExecutionContext = ExecutionContext.global) extends Provider {
+abstract class OAuth2Provider(service: UserIdentitiesService)(implicit ec: ExecutionContext = ExecutionContext.global) extends Provider {
 
   def retrieveUserIdentity(info: OAuth2Info): Future[UserIdentity]
 
@@ -20,7 +20,7 @@ abstract class OAuth2Provider(service: UserIdentityService)(implicit ec: Executi
   }
 
   protected def getProfileId(identity: UserIdentity): Future[AuthUserId] =
-    storeIdentity(identity).map(_.profileId).flatMap {
+    storeIdentity(identity).map(_.userId).flatMap {
       case Some(userId) ⇒ Future.successful(userId)
       case _            ⇒ Future.failed(AuthError.UserIdNotFound)
     }

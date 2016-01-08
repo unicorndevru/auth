@@ -1,8 +1,9 @@
 package auth.providers.email.services
 
-import auth.api.{ AuthMailsService, CredentialsCommandCrypto, PasswordRecoverCommand, UserIdentityService }
+import auth.api.{ AuthMailsService, CredentialsCommandCrypto, PasswordRecoverCommand, UserIdentitiesService }
 import auth.data.identity.{ IdentityId, UserIdentity }
-import auth.protocol.{ IdentitiesFilter, AuthError, AuthUserId }
+import auth.protocol.identities.UserIdentitiesFilter
+import auth.protocol.{ AuthError, AuthUserId }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -10,7 +11,7 @@ import scala.concurrent.Future
 import io.circe.generic.auto._
 
 class PasswordRecoveryService(
-    userIdentityService:   UserIdentityService,
+    userIdentityService:   UserIdentitiesService,
     authMailsService:      AuthMailsService,
     passwordChangeService: PasswordChangeService,
     commandCryptoService:  CredentialsCommandCrypto
@@ -40,13 +41,13 @@ class PasswordRecoveryService(
 
   private def recoverPassword(userId: AuthUserId, newPass: String, email: String): Future[Unit] = {
     userIdentityService
-      .query(IdentitiesFilter(profileId = Option(userId)))
+      .queryAll(UserIdentitiesFilter(userId = Option(userId)))
       .map { list ⇒
         list.foreach { i ⇒ passwordChangeService.recoverPassword(identity = i, password = newPass) }
       }
 
     userIdentityService
-      .query(IdentitiesFilter(profileId = Option(userId)))
+      .queryAll(UserIdentitiesFilter(userId = Option(userId)))
       .map { list ⇒
         list.filter(_.email.contains(email)).foreach { i ⇒
           userIdentityService.updateExistingIdentity(i.copy(isEmailVerified = Some(true)))
@@ -56,17 +57,17 @@ class PasswordRecoveryService(
 
   private def sendNotification(identity: UserIdentity, email: String): Future[Unit] =
     for {
-      list ← userIdentityService.query(IdentitiesFilter(email = Some(email)))
+      list ← userIdentityService.queryAll(UserIdentitiesFilter(email = Some(email)))
       result ← sendForAll(list)
     } yield result
 
   private def sendForAll(users: List[UserIdentity]): Future[Unit] =
-    Future.successful(users.flatMap(_.profileId).foreach(authMailsService.passwordRecoverNotify))
+    Future.successful(users.flatMap(_.userId).foreach(authMailsService.passwordRecoverNotify))
 
   private def findIdentityByEmail(email: String): Future[UserIdentity] = {
     userIdentityService.find(IdentityId(providerId = "email", userId = email)).flatMap {
       case Some(identity) ⇒ Future.successful(identity)
-      case _ ⇒ userIdentityService.query(IdentitiesFilter(email = Some(email))).flatMap {
+      case _ ⇒ userIdentityService.queryAll(UserIdentitiesFilter(email = Some(email))).flatMap {
         list ⇒
           val filteredList = list.filter(i ⇒ i.passwordInfo.isDefined)
           if (filteredList.nonEmpty) Future.successful(filteredList.head)
@@ -81,7 +82,7 @@ class PasswordRecoveryService(
   private def sendSecret(userId: AuthUserId, secret: String): Unit =
     authMailsService.passwordRecover(userId, secret)
 
-  private def getUserIdFromIdentity(identity: UserIdentity): Future[AuthUserId] = identity.profileId match {
+  private def getUserIdFromIdentity(identity: UserIdentity): Future[AuthUserId] = identity.userId match {
     case Some(id) ⇒ Future.successful(id)
     case None     ⇒ Future.failed(AuthError.UserIdNotFound)
   }

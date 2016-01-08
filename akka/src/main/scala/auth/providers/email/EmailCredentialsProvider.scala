@@ -1,13 +1,13 @@
 package auth.providers.email
 
-import auth.api.UserIdentityService
+import auth.api.UserIdentitiesService
 import auth.data.identity.{ IdentityId, UserIdentity }
 import auth.protocol._
 import auth.providers.Provider
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-class EmailCredentialsProvider(service: UserIdentityService, pwdService: PasswordHasherService = BCryptPasswordHasherService)(implicit ec: ExecutionContext = ExecutionContext.global) extends Provider {
+class EmailCredentialsProvider(service: UserIdentitiesService, pwdService: PasswordHasherService = BCryptPasswordHasherService)(implicit ec: ExecutionContext = ExecutionContext.global) extends Provider {
 
   override val id = "email"
 
@@ -31,7 +31,7 @@ class EmailCredentialsProvider(service: UserIdentityService, pwdService: Passwor
         Future.failed(AuthError.WrongPassword)
     }
 
-  private def extractUserId(identity: UserIdentity): Future[AuthUserId] = identity.profileId match {
+  private def extractUserId(identity: UserIdentity): Future[AuthUserId] = identity.userId match {
     case Some(userId) ⇒ Future.successful(userId)
     case None         ⇒ Future.failed(AuthError.UserIdNotFound)
   }

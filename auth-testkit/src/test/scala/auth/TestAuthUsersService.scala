@@ -4,8 +4,8 @@ import auth.api.{ AuthUsersService, CreateUser }
 import auth.protocol.AuthUserId
 
 import scala.collection.concurrent.TrieMap
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
 class TestAuthUsersService extends AuthUsersService {
 

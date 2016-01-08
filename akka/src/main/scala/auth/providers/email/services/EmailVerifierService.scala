@@ -1,8 +1,9 @@
 package auth.providers.email.services
 
-import auth.api.{ CredentialsCommandCrypto, EmailVerifyCommand, AuthMailsService, UserIdentityService }
+import auth.api.{ CredentialsCommandCrypto, EmailVerifyCommand, AuthMailsService, UserIdentitiesService }
 import auth.data.identity.UserIdentity
-import auth.protocol.{ IdentitiesFilter, AuthError, AuthUserId }
+import auth.protocol.identities.UserIdentitiesFilter
+import auth.protocol.{ AuthError, AuthUserId }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -10,7 +11,7 @@ import io.circe.generic.auto._
 
 class EmailVerifierService(
     authMailsService:     AuthMailsService,
-    userIdentityService:  UserIdentityService,
+    userIdentityService:  UserIdentitiesService,
     commandCryptoService: CredentialsCommandCrypto
 )(implicit ec: ExecutionContext = ExecutionContext.global) {
   /**
@@ -21,7 +22,7 @@ class EmailVerifierService(
    */
   def startVerify(userId: AuthUserId): Future[_] =
     userIdentityService
-      .query(IdentitiesFilter(profileId = Option(userId)))
+      .queryAll(UserIdentitiesFilter(userId = Option(userId)))
       .flatMap { list ⇒
         if (list.isEmpty) {
           Future.failed(AuthError.UserHaveNoEmails)
@@ -39,7 +40,7 @@ class EmailVerifierService(
    */
   def verify(email: String): Future[Unit] =
     userIdentityService
-      .query(IdentitiesFilter(email = Some(email)))
+      .queryAll(UserIdentitiesFilter(email = Some(email)))
       .map { list ⇒
         list.foreach(setEmailVerified)
       }

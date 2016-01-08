@@ -1,11 +1,12 @@
 package auth.api
 
 import auth.data.identity.{ IdentityId, UserIdentity }
-import auth.protocol.{ IdentitiesFilter, AuthError, AuthUserId }
+import auth.protocol.identities.UserIdentitiesFilter
+import auth.protocol.{ AuthError, AuthUserId }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-trait UserIdentityService {
+trait UserIdentitiesService {
   def find(id: IdentityId): Future[Option[UserIdentity]]
 
   def get(id: IdentityId): Future[UserIdentity]
@@ -16,7 +17,9 @@ trait UserIdentityService {
 
   def remove(identityId: IdentityId): Future[Boolean]
 
-  def query(filter: IdentitiesFilter = IdentitiesFilter(None, None), offset: Int = 0, limit: Int = 0): Future[List[UserIdentity]]
+  def query(filter: UserIdentitiesFilter = UserIdentitiesFilter(None, None), offset: Int, limit: Int): Future[List[UserIdentity]]
+
+  def queryAll(filter: UserIdentitiesFilter = UserIdentitiesFilter(None, None)): Future[List[UserIdentity]]
 
   /**
    * Plain old save method. Doesn't create new user profile.
@@ -44,7 +47,7 @@ trait UserIdentityService {
   def updateExistingIdentity(identity: UserIdentity): Future[UserIdentity]
 }
 
-class DefaultUserIdentityService(dao: UserIdentityDAO, service: AuthUsersService, events: AuthEvents = AuthEvents)(implicit ec: ExecutionContext = ExecutionContext.global) extends UserIdentityService {
+class DefaultUserIdentitiesService(dao: UserIdentitiesDao, service: AuthUsersService, events: AuthEvents = AuthEvents)(implicit ec: ExecutionContext = ExecutionContext.global) extends UserIdentitiesService {
 
   override def find(id: IdentityId): Future[Option[UserIdentity]] = get(id).map(Some(_)).recover({ case e ⇒ None })
 
@@ -59,7 +62,7 @@ class DefaultUserIdentityService(dao: UserIdentityDAO, service: AuthUsersService
         case None ⇒
           createUser(identity)
             .flatMap { uid ⇒
-              dao.upsert(identity.copy(profileId = Some(uid)))
+              dao.upsert(identity.copy(userId = Some(uid)))
             }
       }
       .map(events.identityCreated)
@@ -85,7 +88,9 @@ class DefaultUserIdentityService(dao: UserIdentityDAO, service: AuthUsersService
   override def remove(identityId: IdentityId): Future[Boolean] =
     dao.delete(identityId)
 
-  override def query(filter: IdentitiesFilter = IdentitiesFilter(), offset: Int = 0, limit: Int = 0): Future[List[UserIdentity]] =
+  override def query(filter: UserIdentitiesFilter = UserIdentitiesFilter(), offset: Int, limit: Int): Future[List[UserIdentity]] =
     dao.query(filter, offset, limit)
 
+  override def queryAll(filter: UserIdentitiesFilter) =
+    dao.queryAll(filter)
 }

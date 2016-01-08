@@ -2,15 +2,16 @@ package auth
 
 import java.util.UUID
 
-import auth.api.UserIdentityDAO
+import auth.api.UserIdentitiesDao
 import auth.data.identity.{ IdentityId, UserIdentity }
-import auth.protocol.{ AuthError, IdentitiesFilter }
+import auth.protocol.AuthError
+import auth.protocol.identities.UserIdentitiesFilter
 
 import scala.collection.concurrent.TrieMap
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class TestUserIdentityDao extends UserIdentityDAO {
+class TestUserIdentitiesDao extends UserIdentitiesDao {
 
   var identities = TrieMap[String, UserIdentity]()
 
@@ -30,13 +31,13 @@ class TestUserIdentityDao extends UserIdentityDAO {
     Future.successful(uc)
   }
 
-  override def query(filter: IdentitiesFilter, offset: Int, limit: Int) = Future.successful {
-    val is = identities.values.filter {
+  override def query(filter: UserIdentitiesFilter, offset: Int, limit: Int) =
+    queryAll(filter).map(_.slice(offset, offset + limit))
+
+  override def queryAll(filter: UserIdentitiesFilter) = Future.successful {
+    identities.values.filter {
       v ⇒
-        filter.email.fold(true)(v.email.contains) && filter.profileId.fold(true)(v.profileId.contains)
+        filter.email.fold(true)(v.email.contains) && filter.userId.fold(true)(v.userId.contains)
     }.toList
-
-    if (limit > 0) is.slice(offset, offset + limit) else is
-
   }
 }

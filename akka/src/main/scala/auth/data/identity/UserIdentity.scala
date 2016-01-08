@@ -11,7 +11,7 @@ case class UserIdentity(
 
   _id: Option[String] = None,
 
-  profileId: Option[AuthUserId] = None,
+  userId: Option[AuthUserId] = None,
 
   email:           Option[String]  = None,
   isEmailVerified: Option[Boolean] = None,
