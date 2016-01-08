@@ -1,4 +1,4 @@
-package auth.core
+package auth.api
 
 import io.circe._
 import io.circe.parse._

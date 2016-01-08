@@ -1,5 +1,0 @@
-package auth
-
-object AuthMicroservice {
-
-}

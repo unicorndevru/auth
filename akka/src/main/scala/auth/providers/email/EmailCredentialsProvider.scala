@@ -1,6 +1,6 @@
 package auth.providers.email
 
-import auth.core.UserIdentityService
+import auth.api.UserIdentityService
 import auth.data.identity.{ IdentityId, UserIdentity }
 import auth.protocol._
 import auth.providers.Provider

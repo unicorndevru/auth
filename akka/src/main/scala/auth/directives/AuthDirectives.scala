@@ -1,4 +1,4 @@
-package auth.api
+package auth.directives
 
 import java.time.Instant
 

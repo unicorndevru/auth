@@ -1,4 +1,4 @@
-package auth.core
+package auth.api
 
 import akka.event.slf4j.Logger
 import auth.protocol.AuthUserId

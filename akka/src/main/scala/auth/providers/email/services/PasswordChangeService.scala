@@ -1,6 +1,6 @@
 package auth.providers.email.services
 
-import auth.core.UserIdentityService
+import auth.api.UserIdentityService
 import auth.data.identity._
 import auth.protocol.{ IdentitiesFilter, AuthError, AuthUserId }
 import auth.providers.email.PasswordHasherService

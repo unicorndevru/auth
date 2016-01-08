@@ -1,7 +1,8 @@
 package auth.handlers
 
-import auth.protocol.{AuthIdentitiesList, AuthIdentity, AuthStatus}
+import auth.protocol.{ AuthIdentitiesList, AuthIdentity, AuthStatus }
 import io.circe._
+import io.circe.generic.auto._
 import io.circe.generic.semiauto._
 
 trait AuthCirceEncoders {

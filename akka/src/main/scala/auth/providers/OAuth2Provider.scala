@@ -1,6 +1,6 @@
 package auth.providers
 
-import auth.core.UserIdentityService
+import auth.api.UserIdentityService
 import auth.data.identity.{ OAuth2Info, UserIdentity }
 import auth.protocol.{ AuthByToken, AuthError, AuthUserId, AuthorizeCommand }
 

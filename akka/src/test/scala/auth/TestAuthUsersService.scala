@@ -1,6 +1,6 @@
 package auth
 
-import auth.core.{ AuthUsersService, CreateUser }
+import auth.api.{ AuthUsersService, CreateUser }
 import auth.protocol.AuthUserId
 
 import scala.collection.concurrent.TrieMap

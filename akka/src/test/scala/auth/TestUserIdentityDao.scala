@@ -2,7 +2,7 @@ package auth
 
 import java.util.UUID
 
-import auth.core.UserIdentityDAO
+import auth.api.UserIdentityDAO
 import auth.data.identity.{ IdentityId, UserIdentity }
 import auth.protocol.{ AuthError, IdentitiesFilter }
 

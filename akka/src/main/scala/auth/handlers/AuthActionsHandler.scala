@@ -3,7 +3,7 @@ package auth.handlers
 import akka.http.javadsl.model.ResponseEntity
 import akka.http.scaladsl.model.{ ContentTypes, HttpEntity, StatusCodes }
 import akka.stream.Materializer
-import auth.api._
+import auth.directives._
 import auth.protocol.{ PasswordChange, SwitchUserCommand }
 import auth.providers.email.EmailPasswordServices
 import auth.services.AuthService

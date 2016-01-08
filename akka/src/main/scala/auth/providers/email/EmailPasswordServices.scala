@@ -1,6 +1,6 @@
 package auth.providers.email
 
-import auth.core._
+import auth.api._
 import auth.providers.email.services.{ EmailChangeService, EmailVerifierService, PasswordChangeService, PasswordRecoveryService }
 import auth.services.GravatarLinkService
 

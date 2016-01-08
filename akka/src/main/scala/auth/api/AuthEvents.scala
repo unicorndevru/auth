@@ -1,4 +1,4 @@
-package auth.core
+package auth.api
 
 import auth.data.identity.UserIdentity
 

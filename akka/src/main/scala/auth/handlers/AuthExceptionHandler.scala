@@ -1,7 +1,7 @@
 package auth.handlers
 
 import akka.http.scaladsl.model.StatusCodes
-import akka.http.scaladsl.server.{Directives, ExceptionHandler}
+import akka.http.scaladsl.server.{ Directives, ExceptionHandler }
 import auth.protocol.AuthError
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 import io.circe._

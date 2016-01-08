@@ -1,6 +1,6 @@
 package auth.providers.email.services
 
-import auth.core.{ CredentialsCommandCrypto, EmailVerifyCommand, AuthMailsService, UserIdentityService }
+import auth.api.{ CredentialsCommandCrypto, EmailVerifyCommand, AuthMailsService, UserIdentityService }
 import auth.data.identity.UserIdentity
 import auth.protocol.{ IdentitiesFilter, AuthError, AuthUserId }
 
