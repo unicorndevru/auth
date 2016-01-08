@@ -87,7 +87,7 @@ val circeV = "0.2.1"
 
 lazy val `auth-akka` = (project in file("akka")).settings(commons: _*).settings(
   name := "auth-akka",
-  version := authV,
+  version := authV + "." + gitHeadCommitSha.value,
   libraryDependencies ++= Seq(
     "com.pauldijou" %% "jwt-circe" % "0.5.0",
     "org.mindrot" % "jbcrypt" % "0.3m",
