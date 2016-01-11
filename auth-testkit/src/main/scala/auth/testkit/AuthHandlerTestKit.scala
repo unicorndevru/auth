@@ -30,7 +30,7 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
 
   lazy val route = Route.seal(new AuthHandler(composition).route)
 
-  val handlerName: String
+  def handlerName: String
 
   s"$handlerName handler" should {
     "return 401" in {
