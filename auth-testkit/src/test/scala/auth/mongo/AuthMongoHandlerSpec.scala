@@ -1,10 +1,11 @@
 package auth.mongo
 
+import auth.api.{ AuthCryptoConfig, JwtCommandCrypto }
 import auth.directives.AuthParams
 import auth.testkit.AuthHandlerTestKit
 import org.junit.runner.RunWith
 import org.scalatest._
-import reactivemongo.api.{ MongoConnection, MongoDriver, DefaultDB }
+import reactivemongo.api.{ DefaultDB, MongoConnection, MongoDriver }
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
@@ -14,10 +15,10 @@ class AuthMongoHandlerSpec extends AuthHandlerTestKit with BeforeAndAfterAll wit
 
   var db: DefaultDB = null
 
-  override val handlerName: String = "mongo auth"
-
-  lazy val composition = new MongoAuthServicesComposition(db) {
+  lazy val composition = new MongoAuthServicesComposition(db) with AuthCryptoConfig {
     override lazy val authParams: AuthParams = AuthParams("changeme")
+
+    override lazy val credentialsCommandCrypto = new JwtCommandCrypto(authParams.secretKey)
   }
 
   override protected def beforeAll() = {
