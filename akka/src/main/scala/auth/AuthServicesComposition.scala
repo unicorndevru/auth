@@ -5,7 +5,7 @@ import auth.providers.Provider
 import auth.providers.email.{ BCryptPasswordHasherService, EmailCredentialsProvider, EmailPasswordServices, PasswordHasherService }
 import auth.services.{ AuthService, GravatarLinkService }
 
-trait AuthServicesComposition extends AuthCryptoConfig {
+trait AuthServicesComposition extends AuthCryptoConfig with AuthMailsServiceProvider {
 
   val authUserService: AuthUsersService
 
@@ -14,7 +14,6 @@ trait AuthServicesComposition extends AuthCryptoConfig {
   lazy val userIdentityService: UserIdentitiesService = new DefaultUserIdentitiesService(userIdentityDao, authUserService)
 
   lazy val passwordHasherService: PasswordHasherService = BCryptPasswordHasherService
-  lazy val authMailsService: AuthMailsService = LoggingAuthMailsService
 
   lazy val gravatarLinkService: GravatarLinkService = GravatarLinkService
 

@@ -24,7 +24,7 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
   implicit override val patienceConfig = PatienceConfig(timeout = Span(5, Seconds))
   implicit val routeTimeout = RouteTestTimeout(FiniteDuration(5, TimeUnit.SECONDS))
 
-  val composition: AuthServicesComposition
+  val composition: AuthServicesComposition with InMemoryAuthMailsProvider
 
   implicit val exceptionHandler = AuthExceptionHandler.generic
 
@@ -53,6 +53,8 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
         status should be(StatusCodes.OK)
         responseAs[AuthStatus]
       }
+
+      InMemoryAuthMailsProvider.mails.map(k ⇒ (k._1, k._2)) should contain(("emailVerify", st.userId))
 
       Post("/auth", cr) ~> route ~> check {
         status should be(StatusCodes.OK)

@@ -2,7 +2,7 @@ package auth.mongo
 
 import auth.api.{ AuthCryptoConfig, JwtCommandCrypto }
 import auth.directives.AuthParams
-import auth.testkit.AuthHandlerTestKit
+import auth.testkit.{ AuthHandlerTestKit, InMemoryAuthMailsProvider }
 import org.junit.runner.RunWith
 import org.scalatest._
 import reactivemongo.api.{ DefaultDB, MongoConnection, MongoDriver }
@@ -15,7 +15,7 @@ class AuthMongoHandlerSpec extends AuthHandlerTestKit with BeforeAndAfterAll wit
 
   var db: DefaultDB = null
 
-  lazy val composition = new MongoAuthServicesComposition(db) with AuthCryptoConfig {
+  lazy val composition = new MongoAuthServicesComposition(db) with AuthCryptoConfig with InMemoryAuthMailsProvider {
     override lazy val authParams: AuthParams = AuthParams("changeme")
 
     override lazy val credentialsCommandCrypto = new JwtCommandCrypto(authParams.secretKey)

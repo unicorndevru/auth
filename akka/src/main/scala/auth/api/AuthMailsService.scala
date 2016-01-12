@@ -3,6 +3,10 @@ package auth.api
 import akka.event.slf4j.Logger
 import auth.protocol.AuthUserId
 
+trait AuthMailsServiceProvider {
+  lazy val authMailsService: AuthMailsService = LoggingAuthMailsService
+}
+
 trait AuthMailsService {
   def newPassword(id: AuthUserId, newPassword: String): Unit
 
