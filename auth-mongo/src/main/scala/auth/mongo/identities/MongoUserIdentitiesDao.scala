@@ -5,7 +5,7 @@ import auth.data.identity.{ IdentityId, UserIdentity }
 import auth.protocol.identities.UserIdentitiesFilter
 import reactivemongo.api.commands.WriteResult
 import reactivemongo.api.indexes.{ Index, IndexType }
-import reactivemongo.api.{ DefaultDB, QueryOpts }
+import reactivemongo.api.{ DB, QueryOpts }
 import reactivemongo.bson.{ BSONObjectID, Macros }
 import reactivemongo.extensions.dao.BsonDao
 import reactivemongo.extensions.dsl.BsonDsl._
@@ -13,7 +13,7 @@ import reactivemongo.extensions.dsl.BsonDsl._
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class MongoUserIdentitiesDao(db: DefaultDB) extends UserIdentitiesDao {
+class MongoUserIdentitiesDao(db: DB) extends UserIdentitiesDao {
 
   import UserIdentityRecord._
 

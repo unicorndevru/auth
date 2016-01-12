@@ -4,14 +4,14 @@ import java.util.UUID
 
 import auth.api.{ AuthUsersService, CreateUser }
 import auth.protocol.AuthUserId
-import reactivemongo.api.DefaultDB
+import reactivemongo.api.DB
 import reactivemongo.extensions.dao.BsonDao
 import reactivemongo.extensions.dsl.BsonDsl._
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-class SimpleMongoUserService(db: DefaultDB) extends AuthUsersService {
+class SimpleMongoUserService(db: DB) extends AuthUsersService {
 
   object dao extends BsonDao[SimpleUserRecord, String](db, "users")
 
