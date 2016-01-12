@@ -4,7 +4,7 @@ import akka.http.javadsl.model.ResponseEntity
 import akka.http.scaladsl.model.{ ContentTypes, HttpEntity, StatusCodes }
 import akka.stream.Materializer
 import auth.directives._
-import auth.protocol.{ PasswordChange, SwitchUserCommand }
+import auth.protocol._
 import auth.providers.email.EmailPasswordServices
 import auth.services.AuthService
 import de.heikoseeberger.akkahttpcirce.CirceSupport
@@ -59,16 +59,10 @@ class AuthActionsHandler(service: AuthService, emailPasswordServices: EmailPassw
           onSuccess(passwordChangeService.changePassword(status.userId, pc.oldPass.getOrElse(""), pc.newPass)){ _ ⇒
             complete(status)
           }
-        } ~ path ("startPasswordRecovery") {
-          /*
-          Action.async(authBodyJson[StartPasswordRecover]) {
-    implicit request ⇒
-      for {
-        _ ← passwordRecoveryService.startRecovery(request.body.email)
-      } yield NoContent
-  }
-           */
-          complete("???")
+        } ~ (path("startPasswordRecovery") & userRequired & entity(as[StartPasswordRecover])) { (status, spr) =>
+          onSuccess(passwordRecoveryService.startRecovery(spr.email)){
+            complete(status)
+          }
         } ~ path ("checkPasswordRecovery") {
           /*
            Action.apply(authToken[CheckPasswordRecoverToken, PasswordRecoverCommand]) {
@@ -108,20 +102,15 @@ class AuthActionsHandler(service: AuthService, emailPasswordServices: EmailPassw
             emailVerifierService.startVerify(s.userId)
               .map(_ ⇒ StatusCodes.NoContent → HttpEntity.empty(ContentTypes.NoContentType))
           )
-        } ~ path ("checkEmailAvailability") {
-          /*
-          Action.async(authBodyJson[EmailCheckAvailability]) {
-    implicit request ⇒
-      profileRegistrar
-        .isEmailRegistered(request.body.email).map {
-          case true ⇒
-            JsonApiFailure(400, "email_already_registered", "Email already registered", "auth").result
-          case false ⇒
-            NoContent
-        }
-  }
-           */
-          complete("???")
+        } ~ (path ("checkEmailAvailability") & entity(as[EmailCheckAvailability])) { eca =>
+          onSuccess(profileRegistrarService.isEmailRegistered(eca.email)) { result =>
+            if (!result) {
+              complete(StatusCodes.NoContent)
+            } else {
+              failWith(AuthError.UserAlreadyRegistered)
+            }
+
+          }
         } ~ path ("startEmailChange") {
           /*
           UserRequiredAction.apply(authBodyJson[StartEmailChange]) {

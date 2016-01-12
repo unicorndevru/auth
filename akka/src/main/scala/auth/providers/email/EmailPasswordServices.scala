@@ -2,6 +2,7 @@ package auth.providers.email
 
 import auth.api._
 import auth.providers.email.services.{ EmailChangeService, EmailVerifierService, PasswordChangeService, PasswordRecoveryService }
+import auth.providers.profile.ProfileRegistrarService
 import auth.services.GravatarLinkService
 
 import scala.concurrent.ExecutionContext
@@ -42,5 +43,12 @@ class EmailPasswordServices(
     authMailsService,
     passwordChangeService,
     commandCryptoService
+  )
+
+  val profileRegistrarService = new ProfileRegistrarService(
+    userIdentityService,
+    gravatarLinkService,
+    emailVerifierService,
+    passwordHasherService
   )
 }
