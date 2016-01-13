@@ -59,9 +59,9 @@ class AuthActionsHandler(service: AuthService, emailPasswordServices: EmailPassw
           onSuccess(passwordChangeService.changePassword(status.userId, pc.oldPass.getOrElse(""), pc.newPass)){ _ ⇒
             complete(status)
           }
-        } ~ (path("startPasswordRecovery") & userRequired & entity(as[StartPasswordRecover])) { (status, spr) =>
+        } ~ (path("startPasswordRecovery") & entity(as[StartPasswordRecover])) { spr =>
           onSuccess(passwordRecoveryService.startRecovery(spr.email)){
-            complete(status)
+            complete(StatusCodes.NoContent)
           }
         } ~ path ("checkPasswordRecovery") {
           /*
@@ -103,7 +103,7 @@ class AuthActionsHandler(service: AuthService, emailPasswordServices: EmailPassw
               .map(_ ⇒ StatusCodes.NoContent → HttpEntity.empty(ContentTypes.NoContentType))
           )
         } ~ (path ("checkEmailAvailability") & entity(as[EmailCheckAvailability])) { eca =>
-          onSuccess(profileRegistrarService.isEmailRegistered(eca.email)) { result =>
+          onSuccess(service.isEmailRegistered(eca.email)) { result =>
             if (!result) {
               complete(StatusCodes.NoContent)
             } else {
