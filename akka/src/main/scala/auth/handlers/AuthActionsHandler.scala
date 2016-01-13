@@ -1,24 +1,27 @@
 package auth.handlers
 
-import akka.http.javadsl.model.ResponseEntity
-import akka.http.scaladsl.model.{ ContentTypes, HttpEntity, StatusCodes }
+import akka.http.scaladsl.model.{ContentTypes, HttpEntity, StatusCodes}
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server._
 import akka.stream.Materializer
-import auth.api.{ChangeEmailCommand, EmailVerifyCommand, PasswordRecoverCommand}
+import auth.AuthServicesComposition
+import auth.api._
 import auth.directives._
 import auth.protocol._
 import auth.providers.email.EmailPasswordServices
 import auth.services.AuthService
 import de.heikoseeberger.akkahttpcirce.CirceSupport
-import akka.http.scaladsl.server.Directives._
+import io.circe.Decoder
 
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{Future, ExecutionContext}
+import scala.util.Success
 
-class AuthActionsHandler(service: AuthService, emailPasswordServices: EmailPasswordServices, override val authParams: AuthParams)(implicit ec: ExecutionContext, mat: Materializer)
+class AuthActionsHandler(composition: AuthServicesComposition, service: AuthService, emailPasswordServices: EmailPasswordServices, override val authParams: AuthParams)(implicit ec: ExecutionContext, mat: Materializer)
     extends CirceSupport with AuthPermissionsDirectives with AuthCirceEncoders with AuthCirceDecoders {
 
   override val authService = service
 
-  val emptyAnswer = StatusCodes.NoContent -> HttpEntity.empty(ContentTypes.NoContentType)
+  val emptyResponse = StatusCodes.NoContent -> HttpEntity.empty(ContentTypes.NoContentType)
 
   import emailPasswordServices._
 
@@ -64,42 +67,57 @@ class AuthActionsHandler(service: AuthService, emailPasswordServices: EmailPassw
           }
         } ~ (path("startPasswordRecovery") & entity(as[StartPasswordRecover])) { spr =>
           onSuccess(passwordRecoveryService.startRecovery(spr.email)) {
-            complete(emptyAnswer)
+            complete(emptyResponse)
           }
         } ~ (path("checkPasswordRecovery") & authTokenCommand[PasswordRecoverCommand, CheckPasswordRecoverToken]) { _ =>
-          complete(emptyAnswer)
-        } ~ (path("recoverPassword") & authTokenExpirableCommand[PasswordRecoverCommand, FinishPasswordRecover]() & userAware) { (cmd, status) =>
-          onSuccess(passwordRecoveryService.finishRecovery(cmd._1.email, cmd._2.newPass)) { pid =>
-            val auth = status.getOrElse(AuthStatus(pid, Seq.empty, None))
-            respondWithAuth(auth) {
-              complete(auth)
+          complete(emptyResponse)
+        } ~ (path("recoverPassword") & authTokenExpirableCommand[PasswordRecoverCommand, FinishPasswordRecover]()) { cmd =>
+          onSuccess(passwordRecoveryService.finishRecovery(cmd._1.email, cmd._2.newPass).flatMap(authService.getStatus)) { authStatus =>
+            respondWithAuth(authStatus) {
+              complete(authStatus)
             }
           }
         } ~ (path("verifyEmail") & authTokenCommand[EmailVerifyCommand, EmailVerifyToken]) { cmd =>
           onSuccess(emailVerifierService.verify(cmd._1.email)) {
-            complete(emptyAnswer)
+            complete(emptyResponse)
           }
         } ~ (path("requestEmailVerify") & userRequired) { s ⇒
           complete(
             emailVerifierService.startVerify(s.userId)
-              .map(_ ⇒ emptyAnswer)
+              .map(_ ⇒ emptyResponse)
           )
         } ~ (path("checkEmailAvailability") & entity(as[EmailCheckAvailability])) { eca =>
           onSuccess(service.isEmailRegistered(eca.email)) {
-            case true => complete(emptyAnswer)
+            case true => complete(emptyResponse)
             case false => failWith(AuthError.UserAlreadyRegistered)
           }
         } ~ (path("startEmailChange") & userRequired & entity(as[StartEmailChange])) { (status, cmd) =>
-          emailChangeService.start(status.userId, cmd.email)
-          complete(emptyAnswer)
-        } ~ (path("finishEmailChange") & authTokenExpirableCommand[ChangeEmailCommand, FinishEmailChange]() & userAware) { (cmd, status) =>
-          onSuccess(emailChangeService.finish(cmd._1.userId, cmd._1.newEmail)) { pid =>
-            val auth = status.getOrElse(AuthStatus(pid, Seq.empty, None))
-            respondWithAuth(auth) {
-              complete(auth)
+          onSuccess(Future(emailChangeService.start(status.userId, cmd.email))) {
+            complete(emptyResponse)
+          }
+        } ~ (path("finishEmailChange") & authTokenExpirableCommand[ChangeEmailCommand, FinishEmailChange]()) { cmd =>
+          onSuccess(emailChangeService.finish(cmd._1.userId, cmd._1.newEmail).flatMap(service.getStatus)){ authStatus =>
+            respondWithAuth(authStatus) {
+              complete(authStatus)
             }
           }
         }
+      }
+    }
+
+  def authTokenCommand[T: Decoder, Y <: TokenCommand : Decoder]: Directive1[(T, Y)] = entity(as[Y]).flatMap { tokenHolder =>
+    composition.credentialsCommandCrypto.decrypt[T](tokenHolder.token) match {
+      case Success(tokenCommand) => provide((tokenCommand, tokenHolder))
+      case _ => failWith(AuthError.WrongToken)
+    }
+  }
+
+  def authTokenExpirableCommand[T <: ExpirableCommand : Decoder, Y <: TokenCommand : Decoder](millisToLive: Long = 86400000): Directive1[(T, Y)] =
+    authTokenCommand[T, Y].flatMap { cmd =>
+      if (cmd._1.isExpired(millisToLive)) {
+        failWith(AuthError.TardyToken)
+      } else {
+        provide(cmd)
       }
     }
 }

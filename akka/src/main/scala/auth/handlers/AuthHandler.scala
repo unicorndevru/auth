@@ -51,7 +51,7 @@ class AuthHandler(val composition: AuthServicesComposition)(implicit ec: Executi
         } ~ put {
           entity(as[AuthByToken])(register) ~ entity(as[AuthByCredentials])(register)
         }
-      } ~ new IdentitiesHandler(userIdentityService, authParams).route ~ new AuthActionsHandler(service, emailPasswordServices, authParams).route
+      } ~ new IdentitiesHandler(userIdentityService, authParams).route ~ new AuthActionsHandler(composition ,service, emailPasswordServices, authParams).route
     }
 
 }
