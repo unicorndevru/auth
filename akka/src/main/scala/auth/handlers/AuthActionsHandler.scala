@@ -16,7 +16,7 @@ import io.circe.Decoder
 import scala.concurrent.{Future, ExecutionContext}
 import scala.util.Success
 
-class AuthActionsHandler(composition: AuthServicesComposition, service: AuthService, emailPasswordServices: EmailPasswordServices, override val authParams: AuthParams)(implicit ec: ExecutionContext, mat: Materializer)
+class AuthActionsHandler(crypt: CredentialsCommandCrypto, service: AuthService, emailPasswordServices: EmailPasswordServices, override val authParams: AuthParams)(implicit ec: ExecutionContext, mat: Materializer)
     extends CirceSupport with AuthPermissionsDirectives with AuthCirceEncoders with AuthCirceDecoders {
 
   override val authService = service
@@ -92,7 +92,7 @@ class AuthActionsHandler(composition: AuthServicesComposition, service: AuthServ
             case false => failWith(AuthError.UserAlreadyRegistered)
           }
         } ~ (path("startEmailChange") & userRequired & entity(as[StartEmailChange])) { (status, cmd) =>
-          onSuccess(Future(emailChangeService.start(status.userId, cmd.email))) {
+          onSuccess(emailChangeService.start(status.userId, cmd.email)) {
             complete(emptyResponse)
           }
         } ~ (path("finishEmailChange") & authTokenExpirableCommand[ChangeEmailCommand, FinishEmailChange]()) { cmd =>
@@ -106,7 +106,7 @@ class AuthActionsHandler(composition: AuthServicesComposition, service: AuthServ
     }
 
   def authTokenCommand[T: Decoder, Y <: TokenCommand : Decoder]: Directive1[(T, Y)] = entity(as[Y]).flatMap { tokenHolder =>
-    composition.credentialsCommandCrypto.decrypt[T](tokenHolder.token) match {
+    crypt.decrypt[T](tokenHolder.token) match {
       case Success(tokenCommand) => provide((tokenCommand, tokenHolder))
       case _ => failWith(AuthError.WrongToken)
     }
