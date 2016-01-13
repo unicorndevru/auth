@@ -10,6 +10,10 @@ object AuthError {
 
   object WrongPassword extends AuthError("auth.wrongPassword", "Wrong password", 401)
 
+  object WrongToken extends AuthError("auth.wrongToken", "Wrong token", 401)
+
+  object TardyToken extends AuthError("auth.tardyToken", "Token is tardy", 401)
+
   object UserIdNotFound extends AuthError("auth.userIdNotFound", "Corrupted identity", 401)
 
   object WrongAuthObject extends AuthError("auth.wrongAuthorizeObject", "Cannot authorize with provided payload", 401)

@@ -6,7 +6,8 @@ import akka.http.scaladsl.model.headers.{ Authorization, OAuth2BearerToken }
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.directives.Credentials
 import akka.http.scaladsl.server.{ AuthorizationFailedRejection, Directive0, Directive1 }
-import auth.protocol.{ AuthStatus, AuthUserId }
+import auth.api.{ExpirableCommand, Base64UnsafeCommandCrypto}
+import auth.protocol.{AuthError, TokenCommand, AuthStatus, AuthUserId}
 import auth.services.AuthService
 import io.circe._
 import io.circe.generic.semiauto._
@@ -17,6 +18,7 @@ import pdi.jwt.{ JwtAlgorithm, JwtCirce, JwtClaim }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.{Failure, Success}
 
 case class AuthParams(
   secretKey: String,
@@ -107,6 +109,22 @@ trait AuthDirectives {
 
     respondWithHeader(Authorization(OAuth2BearerToken(token)))
   }
+
+  def authTokenCommand[T: Decoder, Y <: TokenCommand : Decoder]: Directive1[(T, Y)] = entity(as[Y]).flatMap { tokenHolder =>
+    Base64UnsafeCommandCrypto.decrypt[T](tokenHolder.token) match {
+      case Success(tokenCommand) => provide((tokenCommand, tokenHolder))
+      case _ => failWith(AuthError.WrongToken)
+    }
+  }
+
+  def authTokenExpirableCommand[T <: ExpirableCommand : Decoder, Y <: TokenCommand : Decoder](millisToLive: Long = 86400000): Directive1[(T, Y)] =
+    authTokenCommand[T, Y].flatMap { cmd =>
+      if (cmd._1.isExpired(millisToLive)) {
+        failWith(AuthError.TardyToken)
+      } else {
+        provide(cmd)
+      }
+    }
 }
 
 trait AuthPermissionsDirectives extends AuthDirectives {
