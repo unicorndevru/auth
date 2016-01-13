@@ -128,7 +128,7 @@ resolvers += Resolver.sonatypeRepo("releases")
 
 resolvers += Resolver.jcenterRepo
 
-testOptions in Test += Tests.Argument("junitxml")
+//testOptions in Test += Tests.Argument("junitxml")
 
 parallelExecution in Test := false
 
