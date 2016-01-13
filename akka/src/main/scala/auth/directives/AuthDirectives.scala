@@ -9,6 +9,7 @@ import akka.http.scaladsl.server.{ AuthorizationFailedRejection, Directive0, Dir
 import auth.api.{ExpirableCommand, Base64UnsafeCommandCrypto}
 import auth.protocol.{AuthError, TokenCommand, AuthStatus, AuthUserId}
 import auth.services.AuthService
+import de.heikoseeberger.akkahttpcirce.CirceSupport
 import io.circe._
 import io.circe.generic.semiauto._
 import io.circe.jawn.{ parse ⇒ jawnParse }
@@ -38,7 +39,7 @@ object AuthClaimData {
   implicit val encoder: Encoder[AuthClaimData] = deriveFor[AuthClaimData].encoder
 }
 
-trait AuthDirectives {
+trait AuthDirectives extends CirceSupport {
   val authParams: AuthParams
 
   import authParams._
