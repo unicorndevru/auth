@@ -1,21 +1,26 @@
 package auth.handlers
 
-import akka.http.javadsl.model.ResponseEntity
 import akka.http.scaladsl.model.{ ContentTypes, HttpEntity, StatusCodes }
+import akka.http.scaladsl.server.Directives._
+import akka.http.scaladsl.server._
 import akka.stream.Materializer
+import auth.api._
 import auth.directives._
-import auth.protocol.{ PasswordChange, SwitchUserCommand }
+import auth.protocol._
 import auth.providers.email.EmailPasswordServices
 import auth.services.AuthService
 import de.heikoseeberger.akkahttpcirce.CirceSupport
-import akka.http.scaladsl.server.Directives._
+import io.circe.Decoder
 
 import scala.concurrent.ExecutionContext
+import scala.util.Success
 
-class AuthActionsHandler(service: AuthService, emailPasswordServices: EmailPasswordServices, override val authParams: AuthParams)(implicit ec: ExecutionContext, mat: Materializer)
+class AuthActionsHandler(crypt: CredentialsCommandCrypto, service: AuthService, emailPasswordServices: EmailPasswordServices, override val authParams: AuthParams)(implicit ec: ExecutionContext, mat: Materializer)
     extends CirceSupport with AuthPermissionsDirectives with AuthCirceEncoders with AuthCirceDecoders {
 
   override val authService = service
+
+  val emptyResponse = StatusCodes.NoContent → HttpEntity.empty(ContentTypes.NoContentType)
 
   import emailPasswordServices._
 
@@ -56,94 +61,62 @@ class AuthActionsHandler(service: AuthService, emailPasswordServices: EmailPassw
     pathPrefix("actions") {
       switchRoute ~ post {
         (path("changePassword") & userRequired & entity(as[PasswordChange])) { (status, pc) ⇒
-          onSuccess(passwordChangeService.changePassword(status.userId, pc.oldPass.getOrElse(""), pc.newPass)){ _ ⇒
+          onSuccess(passwordChangeService.changePassword(status.userId, pc.oldPass.getOrElse(""), pc.newPass)) { _ ⇒
             complete(status)
           }
-        } ~ path ("startPasswordRecovery") {
-          /*
-          Action.async(authBodyJson[StartPasswordRecover]) {
-    implicit request ⇒
-      for {
-        _ ← passwordRecoveryService.startRecovery(request.body.email)
-      } yield NoContent
-  }
-           */
-          complete("???")
-        } ~ path ("checkPasswordRecovery") {
-          /*
-           Action.apply(authToken[CheckPasswordRecoverToken, PasswordRecoverCommand]) {
-    implicit request ⇒
-      NoContent
-  }
-           */
-          complete("???")
-        } ~ path ("recoverPassword") {
-          /*
-          Action.async(authTokenExpirableJson[FinishPasswordRecover, PasswordRecoverCommand]()) {
-    implicit request ⇒
-      (for {
-        pid ← passwordRecoveryService.finishRecovery(request.body.token.email, request.body.json.newPass)
-        aStatus ← authStatus(pid, false)
-      } yield aStatus.ok) recoverWith {
-        case e: JsonApiFailure ⇒ e.copy(status = 401).resultF
-      }
-  }
-           */
-          complete("???")
-        } ~ path ("verifyEmail") {
-          /*
-          Action.async(authToken[EmailVerifyToken, EmailVerifyCommand]) {
-    implicit request ⇒
-      (for {
-        result ← emailVerifierService.verify(request.body.email)
-      } yield NoContent) recover {
-        case e: JsonApiFailure ⇒ e.result
-        case u: Exception      ⇒ JsonApiFailure(400, "cannot_verify_email", u.getMessage, "auth").result
-      }
-  }
-           */
-          complete("???")
-        } ~ (path ("requestEmailVerify") & userRequired) { s ⇒
+        } ~ (path("startPasswordRecovery") & entity(as[StartPasswordRecover])) { spr ⇒
+          onSuccess(passwordRecoveryService.startRecovery(spr.email)) {
+            complete(emptyResponse)
+          }
+        } ~ (path("checkPasswordRecovery") & authTokenCommand[PasswordRecoverCommand, CheckPasswordRecoverToken]) { _ ⇒
+          complete(emptyResponse)
+        } ~ (path("recoverPassword") & authTokenExpirableCommand[PasswordRecoverCommand, FinishPasswordRecover]()) { cmd ⇒
+          onSuccess(passwordRecoveryService.finishRecovery(cmd._1.email, cmd._2.newPass).flatMap(authService.getStatus)) { authStatus ⇒
+            respondWithAuth(authStatus) {
+              complete(authStatus)
+            }
+          }
+        } ~ (path("verifyEmail") & authTokenCommand[EmailVerifyCommand, EmailVerifyToken]) { cmd ⇒
+          onSuccess(emailVerifierService.verify(cmd._1.email)) {
+            complete(emptyResponse)
+          }
+        } ~ (path("requestEmailVerify") & userRequired) { s ⇒
           complete(
             emailVerifierService.startVerify(s.userId)
-              .map(_ ⇒ StatusCodes.NoContent → HttpEntity.empty(ContentTypes.NoContentType))
+              .map(_ ⇒ emptyResponse)
           )
-        } ~ path ("checkEmailAvailability") {
-          /*
-          Action.async(authBodyJson[EmailCheckAvailability]) {
-    implicit request ⇒
-      profileRegistrar
-        .isEmailRegistered(request.body.email).map {
-          case true ⇒
-            JsonApiFailure(400, "email_already_registered", "Email already registered", "auth").result
-          case false ⇒
-            NoContent
+        } ~ (path("checkEmailAvailability") & entity(as[EmailCheckAvailability])) { eca ⇒
+          onSuccess(service.isEmailRegistered(eca.email)) {
+            case true  ⇒ complete(emptyResponse)
+            case false ⇒ failWith(AuthError.UserAlreadyRegistered)
+          }
+        } ~ (path("startEmailChange") & userRequired & entity(as[StartEmailChange])) { (status, cmd) ⇒
+          onSuccess(emailChangeService.start(status.userId, cmd.email)) {
+            complete(emptyResponse)
+          }
+        } ~ (path("finishEmailChange") & authTokenExpirableCommand[ChangeEmailCommand, FinishEmailChange]()) { cmd ⇒
+          onSuccess(emailChangeService.finish(cmd._1.userId, cmd._1.newEmail).flatMap(service.getStatus)){ authStatus ⇒
+            respondWithAuth(authStatus) {
+              complete(authStatus)
+            }
+          }
         }
-  }
-           */
-          complete("???")
-        } ~ path ("startEmailChange") {
-          /*
-          UserRequiredAction.apply(authBodyJson[StartEmailChange]) {
-    implicit request ⇒
-      emailChangeService.start(request.userId, request.body.email)
-      NoContent
-  }
-           */
-          complete("???")
-        } ~ path ("finishEmailChange") {
-          /*
-          Action.async(authTokenExpirable[FinishEmailChange, ChangeEmailCommand]()) {
-    implicit request ⇒
-      for {
-        userId ← emailChangeService.finish(request.body.userId, request.body.newEmail)
-        aStatus ← authStatus(userId)
-      } yield aStatus.ok
+      }
+    }
+
+  def authTokenCommand[T: Decoder, Y <: TokenCommand: Decoder]: Directive1[(T, Y)] = entity(as[Y]).flatMap { tokenHolder ⇒
+    crypt.decrypt[T](tokenHolder.token) match {
+      case Success(tokenCommand) ⇒ provide((tokenCommand, tokenHolder))
+      case _                     ⇒ failWith(AuthError.WrongToken)
+    }
   }
 
-           */
-          complete("???")
-        }
+  def authTokenExpirableCommand[T <: ExpirableCommand: Decoder, Y <: TokenCommand: Decoder](millisToLive: Long = 86400000): Directive1[(T, Y)] =
+    authTokenCommand[T, Y].flatMap { cmd ⇒
+      if (cmd._1.isExpired(millisToLive)) {
+        failWith(AuthError.TardyToken)
+      } else {
+        provide(cmd)
       }
     }
 }

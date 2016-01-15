@@ -22,7 +22,8 @@ class EmailChangeService(
     authMailsService:      AuthMailsService
 ) {
 
-  def start(userId: AuthUserId, newEmail: String): Unit = sendHash(newEmail, userId, generateHash(newEmail, userId))
+  def start(userId: AuthUserId, newEmail: String): Future[Unit] =
+    Future.successful(sendHash(newEmail, userId, generateHash(newEmail, userId)))
 
   def finish(userId: AuthUserId, newEmail: String): Future[AuthUserId] = {
     val randomString = Random.alphanumeric.take(8).mkString
