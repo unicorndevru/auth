@@ -10,6 +10,13 @@ trait InMemoryAuthMailsProvider extends AuthMailsServiceProvider {
 object InMemoryAuthMailsProvider extends AuthMailsService {
   var mails: Seq[(String, AuthUserId, Any)] = Seq.empty
 
+  def mailsAsTuple2(): Seq[(String, AuthUserId)] = mails.map{ k ⇒ (k._1, k._2) }
+
+  def getMailsById(id: AuthUserId): Seq[(String, AuthUserId, Any)] = mails.filter{ mail =>  mail._2.id == id.id }
+
+  def getMailsByIdAndReason(id: AuthUserId, reason: String): Seq[(String, AuthUserId, Any)] =
+    mails.filter{ mail =>  mail._2.id == id.id && mail._1 == reason }
+
   override def newPassword(id: AuthUserId, newPassword: String) =
     mails = mails :+ ("newPassword", id, ())
 

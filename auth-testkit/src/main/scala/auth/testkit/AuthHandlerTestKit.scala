@@ -54,7 +54,7 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
         responseAs[AuthStatus]
       }
 
-      InMemoryAuthMailsProvider.mails.map(k ⇒ (k._1, k._2)) should contain(("emailVerify", st.userId))
+      InMemoryAuthMailsProvider.mailsAsTuple2() should contain(("emailVerify", st.userId))
 
       Post("/auth", cr) ~> route ~> check {
         status should be(StatusCodes.OK)
@@ -104,6 +104,61 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
     }
 
     "send email validation requests" in {
+      val cr = AuthByCredentials("email", "test22@me.com", "123qwe123")
+
+      val Some(t) = Put("/auth", cr) ~> route ~> check {
+        status should be(StatusCodes.Created)
+        header("Authorization")
+      }
+
+      val st = Get("/auth").withHeaders(t) ~> route ~> check {
+        status should be(StatusCodes.OK)
+        responseAs[AuthStatus]
+      }
+
+      InMemoryAuthMailsProvider.mailsAsTuple2() should contain(("emailVerify", st.userId))
+    }
+
+    "recover password" in {
+      val cr = AuthByCredentials("email", "testRecoverPass@me.com", "123123")
+
+      val Some(t) = Put("/auth", cr) ~> route ~> check {
+        status should be(StatusCodes.Created)
+        header("Authorization")
+      }
+
+      val st = Get("/auth").withHeaders(t) ~> route ~> check {
+        status should be(StatusCodes.OK)
+        responseAs[AuthStatus]
+      }
+
+      Post("/auth/actions/startPasswordRecovery", StartPasswordRecover("testRecoverPass@me.com")) ~> route ~> check {
+        status should be(StatusCodes.NoContent)
+      }
+
+      InMemoryAuthMailsProvider.mailsAsTuple2() should contain (("passwordRecover", st.userId))
+
+      val letter = InMemoryAuthMailsProvider.getMailsByIdAndReason(st.userId, "passwordRecover")
+
+      letter should have size 1
+
+      val token = letter.head._3.toString
+
+      Post("/auth/actions/checkPasswordRecovery", CheckPasswordRecoverToken(token)) ~> route ~> check {
+        status should be(StatusCodes.NoContent)
+      }
+
+      Post("/auth/actions/recoverPassword", FinishPasswordRecover(token,"321321")) ~> route ~> check {
+        status should be(StatusCodes.OK)
+      }
+
+      Thread.sleep(1000L)
+
+      Post("/auth", cr.copy(password = "321321")) ~> route ~> check {
+        status should be(StatusCodes.OK)
+        responseAs[AuthStatus] should be(st)
+        header("Authorization") should be('defined)
+      }
 
     }
   }
