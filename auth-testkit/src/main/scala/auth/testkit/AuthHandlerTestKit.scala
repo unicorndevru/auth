@@ -130,6 +130,27 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
         status should be(StatusCodes.NoContent)
       }
 
+      val cr2 = AuthByCredentials("email", "test33@me.com", "123qwe123")
+
+      val Some(t2) = Put("/auth", cr2) ~> route ~> check {
+        status should be(StatusCodes.Created)
+        header("Authorization")
+      }
+
+      val st2 = Get("/auth").withHeaders(t2) ~> route ~> check {
+        status should be(StatusCodes.OK)
+        responseAs[AuthStatus]
+      }
+
+      Post("/auth/actions/requestEmailVerify").withHeaders(t2) ~> route ~> check {
+        status should be(StatusCodes.NoContent)
+      }
+
+      Post("/auth/actions/requestEmailVerify").withHeaders(t2) ~> route ~> check {
+        status should be(StatusCodes.NoContent)
+      }
+
+      InMemoryAuthMailsProvider.getMailsById(st2.userId) should have size 3
     }
 
     "recover password" in {
