@@ -10,7 +10,7 @@ import auth.handlers.{ AuthExceptionHandler, AuthHandler }
 import auth.protocol._
 import de.heikoseeberger.akkahttpcirce.CirceSupport
 import org.scalatest._
-import org.scalatest.concurrent.ScalaFutures
+import org.scalatest.concurrent.{ Eventually, ScalaFutures }
 import org.scalatest.time.{ Seconds, Span }
 
 import scala.concurrent.duration.FiniteDuration
@@ -19,7 +19,7 @@ import io.circe._
 import io.circe.generic.auto._
 
 trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers with ScalaFutures with TryValues
-    with OptionValues with BeforeAndAfter with CirceSupport {
+    with OptionValues with BeforeAndAfter with Eventually with CirceSupport {
 
   implicit override val patienceConfig = PatienceConfig(timeout = Span(5, Seconds))
   implicit val routeTimeout = RouteTestTimeout(FiniteDuration(5, TimeUnit.SECONDS))
@@ -54,7 +54,9 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
         responseAs[AuthStatus]
       }
 
-      InMemoryAuthMailsProvider.mailsAsTuple2() should contain(("emailVerify", st.userId))
+      eventually {
+        InMemoryAuthMailsProvider.mailsAsTuple2() should contain(("emailVerify", st.userId))
+      }
 
       Post("/auth", cr) ~> route ~> check {
         status should be(StatusCodes.OK)
@@ -170,7 +172,9 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
         status should be(StatusCodes.NoContent)
       }
 
-      InMemoryAuthMailsProvider.mailsAsTuple2() should contain (("passwordRecover", st.userId))
+      eventually {
+        InMemoryAuthMailsProvider.mailsAsTuple2() should contain(("passwordRecover", st.userId))
+      }
 
       val letters = InMemoryAuthMailsProvider.getMailsByIdAndReason(st.userId, "passwordRecover")
 
@@ -182,17 +186,18 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
         status should be(StatusCodes.NoContent)
       }
 
-      Post("/auth/actions/recoverPassword", FinishPasswordRecover(token,"321321")) ~> route ~> check {
+      Post("/auth/actions/recoverPassword", FinishPasswordRecover(token, "321321")) ~> route ~> check {
         status should be(StatusCodes.OK)
       }
 
-      Thread.sleep(1000L)
-
-      Post("/auth", cr.copy(password = "321321")) ~> route ~> check {
-        status should be(StatusCodes.OK)
-        responseAs[AuthStatus] should be(st)
-        header("Authorization") should be('defined)
+      eventually {
+        Post("/auth", cr.copy(password = "321321")) ~> route ~> check {
+          status should be(StatusCodes.OK)
+          responseAs[AuthStatus] should be(st)
+          header("Authorization") should be('defined)
+        }
       }
+
     }
 
     "change email" in {
@@ -212,7 +217,7 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
         status should be(StatusCodes.NoContent)
       }
 
-      val letters = InMemoryAuthMailsProvider.getMailsByIdAndReason(st.userId,"changeEmail")
+      val letters = InMemoryAuthMailsProvider.getMailsByIdAndReason(st.userId, "changeEmail")
 
       letters should have size 1
 
@@ -220,13 +225,18 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
 
       payload._1 should equal ("newEmail@me.com")
 
-      val st2 =Post("/auth/actions/finishEmailChange", FinishEmailChange(payload._2)) ~> route ~> check {
+      val st2 = Post("/auth/actions/finishEmailChange", FinishEmailChange(payload._2)) ~> route ~> check {
         status should be(StatusCodes.OK)
         responseAs[AuthStatus]
       }
 
       st.userId should equal (st2.userId)
     }
+  }
+
+  override protected def beforeAll() = {
+    InMemoryAuthMailsProvider.reset()
+    super.beforeAll()
   }
 }
 

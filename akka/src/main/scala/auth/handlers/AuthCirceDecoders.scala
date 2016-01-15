@@ -1,6 +1,6 @@
 package auth.handlers
 
-import auth.api.{PasswordRecoverCommand, EmailVerifyCommand, ChangeEmailCommand}
+import auth.api.{ PasswordRecoverCommand, EmailVerifyCommand, ChangeEmailCommand }
 import auth.protocol._
 import io.circe._
 import io.circe.generic.auto._
@@ -25,6 +25,5 @@ trait AuthCirceDecoders {
   implicit val changeEmailCommand: Decoder[ChangeEmailCommand] = deriveFor[ChangeEmailCommand].decoder
   implicit val emailVerifyCommand: Decoder[EmailVerifyCommand] = deriveFor[EmailVerifyCommand].decoder
   implicit val passwordRecoverCommand: Decoder[PasswordRecoverCommand] = deriveFor[PasswordRecoverCommand].decoder
-
 
 }

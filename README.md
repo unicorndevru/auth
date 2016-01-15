@@ -3,7 +3,7 @@ HOST: http://dgtl.pro
 
 # Authorization
 
-Авторизация
+Авторизация [![Build Status](https://travis-ci.org/unicorndevru/auth.svg?branch=master)](https://travis-ci.org/unicorndevru/auth)
 
 # Group Auth
 

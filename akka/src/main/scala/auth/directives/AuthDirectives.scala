@@ -2,18 +2,18 @@ package auth.directives
 
 import java.time.Instant
 
-import akka.http.scaladsl.model.headers.{Authorization, OAuth2BearerToken}
+import akka.http.scaladsl.model.headers.{ Authorization, OAuth2BearerToken }
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.directives.Credentials
-import akka.http.scaladsl.server.{AuthorizationFailedRejection, Directive0, Directive1}
-import auth.protocol.{AuthStatus, AuthUserId}
+import akka.http.scaladsl.server.{ AuthorizationFailedRejection, Directive0, Directive1 }
+import auth.protocol.{ AuthStatus, AuthUserId }
 import auth.services.AuthService
 import io.circe._
 import io.circe.generic.semiauto._
-import io.circe.jawn.{parse => jawnParse}
+import io.circe.jawn.{ parse ⇒ jawnParse }
 import io.circe.syntax._
 import pdi.jwt.algorithms.JwtHmacAlgorithm
-import pdi.jwt.{JwtAlgorithm, JwtCirce, JwtClaim}
+import pdi.jwt.{ JwtAlgorithm, JwtCirce, JwtClaim }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
