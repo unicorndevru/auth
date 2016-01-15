@@ -193,7 +193,39 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
         responseAs[AuthStatus] should be(st)
         header("Authorization") should be('defined)
       }
+    }
 
+    "change email" in {
+      val cr = AuthByCredentials("email", "testChangeEmail@me.com", "123123")
+
+      val Some(t) = Put("/auth", cr) ~> route ~> check {
+        status should be(StatusCodes.Created)
+        header("Authorization")
+      }
+
+      val st = Get("/auth").withHeaders(t) ~> route ~> check {
+        status should be(StatusCodes.OK)
+        responseAs[AuthStatus]
+      }
+
+      Post("/auth/actions/startEmailChange", StartEmailChange("newEmail@me.com")).withHeaders(t) ~> route ~> check {
+        status should be(StatusCodes.NoContent)
+      }
+
+      val letters = InMemoryAuthMailsProvider.getMailsByIdAndReason(st.userId,"changeEmail")
+
+      letters should have size 1
+
+      val payload = letters.head._3.asInstanceOf[(String, String)]
+
+      payload._1 should equal ("newEmail@me.com")
+
+      val st2 =Post("/auth/actions/finishEmailChange", FinishEmailChange(payload._2)) ~> route ~> check {
+        status should be(StatusCodes.OK)
+        responseAs[AuthStatus]
+      }
+
+      st.userId should equal (st2.userId)
     }
   }
 }
