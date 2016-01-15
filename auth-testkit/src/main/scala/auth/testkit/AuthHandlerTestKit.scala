@@ -41,7 +41,9 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
       val cr = AuthByCredentials("email", "test@me.com", "123qwe")
 
       val Some(t) = Put("/auth", cr) ~> route ~> check {
-        status should be(StatusCodes.Created)
+        eventually {
+          status should be(StatusCodes.Created)
+        }
         header("Authorization")
       }
 
