@@ -117,6 +117,19 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
       }
 
       InMemoryAuthMailsProvider.mailsAsTuple2() should contain(("emailVerify", st.userId))
+
+      val letters = InMemoryAuthMailsProvider.getMailsByIdAndReason(st.userId, "emailVerify")
+
+      letters should have size 1
+
+      val payload = letters.head._3.asInstanceOf[(String, String)]
+
+      payload._1 should equal ("test22@me.com")
+
+      Post("/auth/actions/verifyEmail", EmailVerifyToken(payload._2)) ~> route ~> check {
+        status should be(StatusCodes.NoContent)
+      }
+
     }
 
     "recover password" in {
@@ -138,11 +151,11 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
 
       InMemoryAuthMailsProvider.mailsAsTuple2() should contain (("passwordRecover", st.userId))
 
-      val letter = InMemoryAuthMailsProvider.getMailsByIdAndReason(st.userId, "passwordRecover")
+      val letters = InMemoryAuthMailsProvider.getMailsByIdAndReason(st.userId, "passwordRecover")
 
-      letter should have size 1
+      letters should have size 1
 
-      val token = letter.head._3.toString
+      val token = letters.head._3.toString
 
       Post("/auth/actions/checkPasswordRecovery", CheckPasswordRecoverToken(token)) ~> route ~> check {
         status should be(StatusCodes.NoContent)
