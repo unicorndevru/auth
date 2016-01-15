@@ -40,8 +40,8 @@ val commons = Seq(
 commons
 
 lazy val `auth-gather` = (project in file("."))
-  .dependsOn(`auth`)
-  .aggregate(`auth`)
+  .dependsOn(`auth`, `auth-testkit`)
+  .aggregate(`auth`, `auth-testkit`)
 
 lazy val `auth` = (project in file("core")).settings(commons: _*).settings(
   name := "auth",
@@ -128,7 +128,7 @@ resolvers += Resolver.sonatypeRepo("releases")
 
 resolvers += Resolver.jcenterRepo
 
-testOptions in Test += Tests.Argument("junitxml")
+//testOptions in Test += Tests.Argument("junitxml")
 
 parallelExecution in Test := false
 
