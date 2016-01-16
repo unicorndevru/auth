@@ -38,12 +38,10 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
     }
 
     "create a user" in {
-      val cr = AuthByCredentials("email", "test@me.com", "123qwe")
+      val cr = AuthByCredentials("email", "testCreate@me.com", "123qwe")
 
       val Some(t) = Put("/auth", cr) ~> route ~> check {
-        eventually {
-          status should be(StatusCodes.Created)
-        }
+        status should be(StatusCodes.Created)
         header("Authorization")
       }
 
@@ -57,7 +55,7 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
       }
 
       eventually {
-        InMemoryAuthMailsProvider.mailsAsTuple2() should contain(("emailVerify", st.userId))
+        InMemoryAuthMailsProvider.contains("emailVerify", st.userId).futureValue should be(true)
       }
 
       Post("/auth", cr) ~> route ~> check {
@@ -120,9 +118,9 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
         responseAs[AuthStatus]
       }
 
-      InMemoryAuthMailsProvider.mailsAsTuple2() should contain(("emailVerify", st.userId))
+      InMemoryAuthMailsProvider.contains("emailVerify", st.userId).futureValue should be(true)
 
-      val letters = InMemoryAuthMailsProvider.getMailsByIdAndReason(st.userId, "emailVerify")
+      val letters = InMemoryAuthMailsProvider.getMailsByIdAndReason(st.userId, "emailVerify").futureValue
 
       letters should have size 1
 
@@ -154,7 +152,7 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
         status should be(StatusCodes.NoContent)
       }
 
-      InMemoryAuthMailsProvider.getMailsById(st2.userId) should have size 3
+      InMemoryAuthMailsProvider.getMailsById(st2.userId).futureValue should have size 3
     }
 
     "recover password" in {
@@ -175,10 +173,10 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
       }
 
       eventually {
-        InMemoryAuthMailsProvider.mailsAsTuple2() should contain(("passwordRecover", st.userId))
+        InMemoryAuthMailsProvider.contains("passwordRecover", st.userId).futureValue should be(true)
       }
 
-      val letters = InMemoryAuthMailsProvider.getMailsByIdAndReason(st.userId, "passwordRecover")
+      val letters = InMemoryAuthMailsProvider.getMailsByIdAndReason(st.userId, "passwordRecover").futureValue
 
       letters should have size 1
 
@@ -219,7 +217,7 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
         status should be(StatusCodes.NoContent)
       }
 
-      val letters = InMemoryAuthMailsProvider.getMailsByIdAndReason(st.userId, "changeEmail")
+      val letters = InMemoryAuthMailsProvider.getMailsByIdAndReason(st.userId, "changeEmail").futureValue
 
       letters should have size 1
 
@@ -234,11 +232,6 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
 
       st.userId should equal (st2.userId)
     }
-  }
-
-  override protected def beforeAll() = {
-    InMemoryAuthMailsProvider.reset()
-    super.beforeAll()
   }
 }
 

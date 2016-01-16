@@ -8,7 +8,7 @@ import io.circe.generic.auto._
 
 trait ActionSwitchTestKit {
   self: AuthHandlerTestKit ⇒
-  s"auth action switch handler" should {
+  "auth action switch handler" should {
     "switch user" in {
 
       val id = Put("/auth", AuthByCredentials("email", "test2@me.com", "123qwe")) ~> route ~> check {

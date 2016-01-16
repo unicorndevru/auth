@@ -1,37 +1,60 @@
 package auth.testkit
 
+import akka.actor.{ Actor, Props, ActorSystem }
 import auth.api.{ AuthMailsService, AuthMailsServiceProvider }
 import auth.protocol.AuthUserId
+
+import scala.concurrent.Future
+import akka.pattern.ask
+import scala.concurrent.duration._
 
 trait InMemoryAuthMailsProvider extends AuthMailsServiceProvider {
   override lazy val authMailsService: AuthMailsService = InMemoryAuthMailsProvider
 }
 
 object InMemoryAuthMailsProvider extends AuthMailsService {
-  var mails: Seq[(String, AuthUserId, Any)] = Seq.empty
 
-  def reset() = mails = Seq.empty
+  private implicit val s = ActorSystem("test-mails")
 
-  def mailsAsTuple2(): Seq[(String, AuthUserId)] = mails.map{ k ⇒ (k._1, k._2) }
+  import s.dispatcher
+  implicit val to = akka.util.Timeout(1 second)
 
-  def getMailsById(id: AuthUserId): Seq[(String, AuthUserId, Any)] = mails.filter{ mail ⇒ mail._2.id == id.id }
+  val mails = s.actorOf(Props(new Actor {
+    override def receive = handle(Vector.empty)
 
-  def getMailsByIdAndReason(id: AuthUserId, reason: String): Seq[(String, AuthUserId, Any)] =
-    mails.filter{ mail ⇒ mail._2.id == id.id && mail._1 == reason }
+    def handle(buff: Vector[(String, AuthUserId, Any)]): Receive = {
+      case m: (String, AuthUserId, _) ⇒
+        context.become(handle(buff :+ m))
+
+      case (s: String, a: AuthUserId) ⇒
+        sender() ! buff.find(p ⇒ p._1 == s && p._2 == a)
+
+      case a: AuthUserId ⇒
+        sender() ! buff.filter(_._2 == a)
+    }
+  }))
+
+  def contains(reason: String, id: AuthUserId): Future[Boolean] = (mails ? (reason, id)).mapTo[Option[(String, AuthUserId, Any)]].map(_.isDefined)
+
+  def payload(reason: String, id: AuthUserId): Future[Any] = (mails ? (reason, id)).mapTo[Option[(String, AuthUserId, Any)]].map(_.get._3)
+
+  def getMailsByIdAndReason(id: AuthUserId, reason: String): Future[Seq[(String, AuthUserId, Any)]] = (mails ? id).mapTo[Vector[(String, AuthUserId, Any)]].map(_.filter(_._1 == reason).toSeq)
+
+  def getMailsById(id: AuthUserId): Future[Seq[(String, AuthUserId, Any)]] = (mails ? id).mapTo[Vector[(String, AuthUserId, Any)]].map(_.toSeq)
 
   override def newPassword(id: AuthUserId, newPassword: String) =
-    mails = mails :+ ("newPassword", id, ())
+    mails ! ("newPassword", id, ())
 
   override def emailVerify(id: AuthUserId, email: String, token: String) =
-    mails = mails :+ ("emailVerify", id, (email, token))
+    mails ! ("emailVerify", id, (email, token))
 
   override def passwordRecoverNotify(id: AuthUserId) =
-    mails = mails :+ ("passwordRecoverNotify", id, ())
+    mails ! ("passwordRecoverNotify", id, ())
 
   override def passwordRecover(id: AuthUserId, token: String) =
-    mails = mails :+ ("passwordRecover", id, token)
+    mails ! ("passwordRecover", id, token)
 
   override def changeEmail(id: AuthUserId, newEmail: String, token: String) =
-    mails = mails :+ ("changeEmail", id, (newEmail, token))
+    mails ! ("changeEmail", id, (newEmail, token))
 
 }
