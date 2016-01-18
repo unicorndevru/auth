@@ -55,7 +55,7 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
       }
 
       eventually {
-        InMemoryAuthMailsProvider.contains("emailVerify", st.userId).futureValue should be(true)
+        InMemoryAuthMailsProvider.contains("emailVerify", st.userId) should be(true)
       }
 
       Post("/auth", cr) ~> route ~> check {
@@ -118,9 +118,9 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
         responseAs[AuthStatus]
       }
 
-      InMemoryAuthMailsProvider.contains("emailVerify", st.userId).futureValue should be(true)
+      InMemoryAuthMailsProvider.contains("emailVerify", st.userId) should be(true)
 
-      val letters = InMemoryAuthMailsProvider.getMailsByIdAndReason(st.userId, "emailVerify").futureValue
+      val letters = InMemoryAuthMailsProvider.getMailsByIdAndReason(st.userId, "emailVerify")
 
       letters should have size 1
 
@@ -152,7 +152,7 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
         status should be(StatusCodes.NoContent)
       }
 
-      InMemoryAuthMailsProvider.getMailsById(st2.userId).futureValue should have size 3
+      InMemoryAuthMailsProvider.getMailsById(st2.userId) should have size 3
     }
 
     "recover password" in {
@@ -173,10 +173,10 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
       }
 
       eventually {
-        InMemoryAuthMailsProvider.contains("passwordRecover", st.userId).futureValue should be(true)
+        InMemoryAuthMailsProvider.contains("passwordRecover", st.userId) should be(true)
       }
 
-      val letters = InMemoryAuthMailsProvider.getMailsByIdAndReason(st.userId, "passwordRecover").futureValue
+      val letters = InMemoryAuthMailsProvider.getMailsByIdAndReason(st.userId, "passwordRecover")
 
       letters should have size 1
 
@@ -217,7 +217,7 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
         status should be(StatusCodes.NoContent)
       }
 
-      val letters = InMemoryAuthMailsProvider.getMailsByIdAndReason(st.userId, "changeEmail").futureValue
+      val letters = InMemoryAuthMailsProvider.getMailsByIdAndReason(st.userId, "changeEmail")
 
       letters should have size 1
 
