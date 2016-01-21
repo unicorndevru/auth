@@ -34,6 +34,11 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
     "return 401" in {
       Get("/auth") ~> route ~> check {
         status should be(StatusCodes.Unauthorized)
+        header("www-authenticate") should be('empty)
+      }
+
+      Post("/auth", AuthByCredentials("email", "testCheck@me.com", "123qwe")) ~> route ~> check {
+        status should be(StatusCodes.NotFound)
       }
     }
 

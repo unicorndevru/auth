@@ -2,6 +2,7 @@ package auth.mongo.identities
 
 import auth.api.UserIdentitiesDao
 import auth.data.identity.{ IdentityId, UserIdentity }
+import auth.protocol.AuthError
 import auth.protocol.identities.UserIdentitiesFilter
 import reactivemongo.api.commands.WriteResult
 import reactivemongo.api.indexes.{ Index, IndexType }
@@ -78,7 +79,7 @@ class MongoUserIdentitiesDao(db: DB) extends UserIdentitiesDao {
     dao.findOne("identityId" $eq id)
       .flatMap {
         case Some(userIdentityRecord) ⇒ Future.successful(recordToData(userIdentityRecord))
-        case None                     ⇒ Future.failed(new NoSuchElementException(s"Cannot find identity with id = $id"))
+        case None                     ⇒ Future.failed(AuthError.IdentityNotFound)
       }
 
   override def get(id: String): Future[UserIdentity] =
@@ -88,7 +89,7 @@ class MongoUserIdentitiesDao(db: DB) extends UserIdentitiesDao {
     } yield user)
       .flatMap {
         case Some(userIdentityRecord) ⇒ Future.successful(recordToData(userIdentityRecord))
-        case None                     ⇒ Future.failed(new NoSuchElementException(s"Cannot find identity with id = $id"))
+        case None                     ⇒ Future.failed(AuthError.IdentityNotFound)
       }
 
   override def delete(id: IdentityId): Future[Boolean] =

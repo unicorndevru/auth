@@ -39,49 +39,11 @@ val commons = Seq(
 
 commons
 
-lazy val `auth-gather` = (project in file("."))
-  .dependsOn(`auth`, `auth-testkit`)
-  .aggregate(`auth`, `auth-testkit`)
+lazy val `auth` = (project in file("."))
+  .dependsOn(`auth-testkit`)
+  .aggregate(`auth-testkit`)
 
-lazy val `auth` = (project in file("core")).settings(commons: _*).settings(
-  name := "auth",
-  version := authV,
-  libraryDependencies ++= Seq(
-    "com.github.t3hnar" %% "scala-bcrypt" % "2.4",
-    "org.reactivemongo" %% "reactivemongo-extensions-bson" % "0.11.7.play24" % Provided,
-    "org.reactivemongo" %% "play2-reactivemongo" % reactiveMongoVersion % Provided,
-    "ru.unicorndev" %% "eventbus" % "0.2.1",
-    ws % Provided,
-    json % Provided,
-    specs2 % Test
-  )
-).enablePlugins(PlayScala)
-  .disablePlugins(PlayLayoutPlugin)
-  .dependsOn(`auth-actions`, `auth-protocol`)
-  .aggregate(`auth-actions`, `auth-protocol`)
-
-lazy val `auth-actions` = (project in file("actions")).settings(commons: _*).settings(
-  name := "auth-actions",
-  version := authV,
-  libraryDependencies ++= Seq(
-    "com.pauldijou" %% "jwt-play" % "0.4.0",
-    "net.ceedubs" %% "ficus" % "1.1.2",
-    "ru.unicorndev" %% "failures" % "0.1.0"
-  )
-).enablePlugins(PlayScala)
-  .disablePlugins(PlayLayoutPlugin)
-  .dependsOn(`auth-protocol`)
-  .aggregate(`auth-protocol`)
-
-lazy val `auth-protocol` = (project in file("protocol")).settings(commons: _*).settings(
-  name := "auth-protocol",
-  version := authV,
-  libraryDependencies ++= Seq(
-    json % Provided
-  )
-)
-
-val akkaHttpV = "2.0.1"
+val akkaHttpV = "2.0.2"
 
 val circeV = "0.2.1"
 

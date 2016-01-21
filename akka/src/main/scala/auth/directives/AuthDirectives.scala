@@ -6,7 +6,7 @@ import akka.http.scaladsl.model.headers.{ Authorization, OAuth2BearerToken }
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.directives.Credentials
 import akka.http.scaladsl.server.{ AuthorizationFailedRejection, Directive0, Directive1 }
-import auth.protocol.{ AuthStatus, AuthUserId }
+import auth.protocol.{ AuthError, AuthStatus, AuthUserId }
 import auth.services.AuthService
 import io.circe._
 import io.circe.generic.semiauto._
@@ -41,40 +41,43 @@ trait AuthDirectives {
 
   import authParams._
 
-  private val authDir = authenticateOAuth2("auth", new Authenticator[AuthStatus] {
-    override def apply(v1: Credentials) = v1 match {
-      case Credentials.Provided(token) ⇒
-        JwtCirce.decode(token, secretKey, Seq(JwtAlgorithm.HS256))
-          .filter(claim ⇒
-            issuer.fold(claim.isValid)(iss ⇒
-              audience.fold(claim.isValid(iss))(aud ⇒ claim.isValid(iss, aud)))
-              && claim.subject.isDefined)
-          .toOption
-          .map { claim ⇒
-
-            val s = AuthStatus(
-              userId = AuthUserId(claim.subject.get),
-              roles = Seq.empty,
-              originUserId = None
-            )
-
-            jawnParse(claim.content).flatMap(_.as[AuthClaimData]).fold(
-              _ ⇒ s,
-              d ⇒ s.copy(
-                roles = d.r,
-                originUserId = d.o.map(AuthUserId)
+  val userAware: Directive1[Option[AuthStatus]] = optionalHeaderValueByType(classOf[Authorization]).flatMap{
+    case Some(a) ⇒
+      provide(a.credentials match {
+        case t: OAuth2BearerToken ⇒
+          JwtCirce.decode(t.token, secretKey, Seq(JwtAlgorithm.HS256))
+            .filter(claim ⇒
+              issuer.fold(claim.isValid)(iss ⇒
+                audience.fold(claim.isValid(iss))(aud ⇒ claim.isValid(iss, aud)))
+                && claim.subject.isDefined)
+            .toOption
+            .map { claim ⇒
+              val s = AuthStatus(
+                userId = AuthUserId(claim.subject.get),
+                roles = Seq.empty,
+                originUserId = None
               )
-            )
 
-          }
-      case _ ⇒
-        None
-    }
-  })
+              jawnParse(claim.content).flatMap(_.as[AuthClaimData]).fold(
+                _ ⇒ s,
+                d ⇒ s.copy(
+                  roles = d.r,
+                  originUserId = d.o.map(AuthUserId)
+                )
+              )
+            }
 
-  def userAware: Directive1[Option[AuthStatus]] = authDir.optional
+        case t ⇒
+          None
+      })
+    case None ⇒
+      provide(None)
+  }
 
-  def userRequired: Directive1[AuthStatus] = authDir
+  val userRequired: Directive1[AuthStatus] = userAware.flatMap {
+    case Some(a) ⇒ provide(a)
+    case None    ⇒ failWith(AuthError.Unauthorized)
+  }
 
   def rolesRequired(s: AuthStatus, rs: String*): Directive1[AuthStatus] =
     if (rs.forall(rs.contains)) {
