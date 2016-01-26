@@ -3,7 +3,7 @@ import sbt.Keys._
 
 import scalariform.formatter.preferences._
 
-name := "auth-gather"
+name := "auth"
 
 val authV = "0.4.0"
 
