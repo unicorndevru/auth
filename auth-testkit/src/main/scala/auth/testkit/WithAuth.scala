@@ -2,12 +2,12 @@ package auth.testkit
 
 import java.time.Instant
 
-import akka.http.scaladsl.model.headers.{Authorization, OAuth2BearerToken}
+import akka.http.scaladsl.model.headers.{ Authorization, OAuth2BearerToken }
 import auth.directives.AuthClaimData._
-import auth.directives.{AuthClaimData, AuthParams}
+import auth.directives.{ AuthClaimData, AuthParams }
 import auth.protocol.AuthStatus
 import io.circe.syntax._
-import pdi.jwt.{JwtCirce, JwtClaim}
+import pdi.jwt.{ JwtCirce, JwtClaim }
 
 abstract class WithAuth(status: AuthStatus, params: AuthParams) {
 
