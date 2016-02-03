@@ -6,8 +6,8 @@ import akka.http.scaladsl.model.headers.{ Authorization, OAuth2BearerToken }
 import auth.directives.AuthClaimData._
 import auth.directives.{ AuthClaimData, AuthParams }
 import auth.protocol.AuthStatus
-import io.circe.syntax._
-import pdi.jwt.{ JwtCirce, JwtClaim }
+import pdi.jwt.{ JwtClaim, JwtJson }
+import play.api.libs.json.Json
 
 abstract class WithAuth(status: AuthStatus, params: AuthParams) {
 
@@ -19,10 +19,10 @@ abstract class WithAuth(status: AuthStatus, params: AuthParams) {
     subject = Some(status.userId.id),
     issuer = issuer,
     audience = audience,
-    content = AuthClaimData(r = status.roles.distinct, o = status.originUserId.map(_.id)).asJson.noSpaces
+    content = Json.toJson(AuthClaimData(r = status.roles.distinct, o = status.originUserId.map(_.id))).toString
   )
 
-  val token = JwtCirce.encode(claim, secretKey, algo)
+  val token = JwtJson.encode(claim, secretKey, algo)
 
   val tokenHeader: Authorization = Authorization(OAuth2BearerToken(token))
 }

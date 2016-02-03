@@ -4,19 +4,16 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.stream.Materializer
 import auth.AuthServicesComposition
-import auth.directives.{ AuthDirectives, AuthParams }
-import auth.api.UserIdentitiesService
+import auth.directives.AuthDirectives
 import auth.protocol._
-import auth.providers.email.EmailPasswordServices
-import auth.services.AuthService
-import de.heikoseeberger.akkahttpcirce.CirceSupport
+import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
 
 import scala.concurrent.ExecutionContext
 
-class AuthHandler(val composition: AuthServicesComposition)(implicit ec: ExecutionContext, mat: Materializer) extends CirceSupport with AuthDirectives with AuthCirceEncoders with AuthCirceDecoders {
+class AuthHandler(val composition: AuthServicesComposition)(implicit ec: ExecutionContext, mat: Materializer) extends PlayJsonSupport with AuthDirectives with AuthJsonWrites with AuthJsonReads {
 
-  import composition.{ authService ⇒ service }
-  import composition.{ userIdentityService, emailPasswordServices }
+  import composition.{ authService ⇒ service, emailPasswordServices, userIdentityService }
+
   override val authParams = composition.authParams
 
   def authorize(cmd: AuthorizeCommand) =

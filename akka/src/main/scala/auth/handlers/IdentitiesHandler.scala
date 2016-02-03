@@ -7,11 +7,11 @@ import auth.api.UserIdentitiesService
 import auth.data.identity.UserIdentity
 import auth.protocol._
 import auth.protocol.identities.{ UserIdentitiesFilter, AuthIdentityId, AuthIdentity, AuthIdentitiesList }
-import de.heikoseeberger.akkahttpcirce.CirceSupport
+import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-class IdentitiesHandler(service: UserIdentitiesService, override val authParams: AuthParams)(implicit ec: ExecutionContext, mat: Materializer) extends CirceSupport with AuthDirectives with AuthCirceEncoders with AuthCirceDecoders {
+class IdentitiesHandler(service: UserIdentitiesService, override val authParams: AuthParams)(implicit ec: ExecutionContext, mat: Materializer) extends PlayJsonSupport with AuthDirectives with AuthJsonWrites with AuthJsonReads {
 
   def identityToProtocol(i: UserIdentity): AuthIdentity =
     AuthIdentity(

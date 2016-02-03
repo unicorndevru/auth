@@ -2,13 +2,12 @@ package auth.providers.email.services
 
 import auth.api.{ AuthMailsService, CredentialsCommandCrypto, PasswordRecoverCommand, UserIdentitiesService }
 import auth.data.identity.{ IdentityId, UserIdentity }
+import auth.handlers.AuthJsonWrites
 import auth.protocol.identities.UserIdentitiesFilter
 import auth.protocol.{ AuthError, AuthUserId }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-
-import io.circe.generic.auto._
 
 class PasswordRecoveryService(
     userIdentityService:   UserIdentitiesService,
@@ -16,6 +15,8 @@ class PasswordRecoveryService(
     passwordChangeService: PasswordChangeService,
     commandCryptoService:  CredentialsCommandCrypto
 ) {
+
+  import AuthJsonWrites.passwordRecoverCommandWrites
 
   /**
    * Will look for an identity with verified email and with password info (credentials identity)

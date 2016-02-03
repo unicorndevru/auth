@@ -1,19 +1,20 @@
 package auth.providers.email.services
 
-import auth.api.{ CredentialsCommandCrypto, EmailVerifyCommand, AuthMailsService, UserIdentitiesService }
+import auth.api.{ AuthMailsService, CredentialsCommandCrypto, EmailVerifyCommand, UserIdentitiesService }
 import auth.data.identity.UserIdentity
 import auth.protocol.identities.UserIdentitiesFilter
 import auth.protocol.{ AuthError, AuthUserId }
 
 import scala.concurrent.{ ExecutionContext, Future }
 
-import io.circe.generic.auto._
-
 class EmailVerifierService(
     authMailsService:     AuthMailsService,
     userIdentityService:  UserIdentitiesService,
     commandCryptoService: CredentialsCommandCrypto
 )(implicit ec: ExecutionContext = ExecutionContext.global) {
+
+  import auth.handlers.AuthJsonWrites.emailVerifyCommandWrites
+
   /**
    * Procedure to start verifying all the user's emails
    *

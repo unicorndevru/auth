@@ -1,17 +1,17 @@
 package auth.api
 
-import io.circe._
-import io.circe.parse._
-import io.circe.syntax._
+import auth.protocol.AuthError.JsonParseError
+import play.api.libs.json.{ JsError, Json, Reads, Writes }
+
 import pdi.jwt.algorithms.JwtHmacAlgorithm
-import pdi.jwt.{ JwtAlgorithm, JwtCirce }
+import pdi.jwt.{ JwtJson, JwtAlgorithm }
 
 import scala.util.{ Failure, Success, Try }
 
 trait CredentialsCommandCrypto {
-  def encrypt[T: Encoder](cmd: T): String
+  def encrypt[T: Writes](cmd: T): String
 
-  def decrypt[T: Decoder](s: String): Try[T]
+  def decrypt[T: Reads](s: String): Try[T]
 }
 
 object Base64UnsafeCommandCrypto extends CredentialsCommandCrypto {
@@ -23,15 +23,17 @@ object Base64UnsafeCommandCrypto extends CredentialsCommandCrypto {
 
   def base64decode(s: String) = new String(decoder.decode(s), "UTF-8")
 
-  override def encrypt[T: Encoder](cmd: T) = base64encode(cmd.asJson.noSpaces)
+  override def encrypt[T: Writes](cmd: T) = base64encode(Json.toJson(cmd).toString)
 
-  override def decrypt[T: Decoder](s: String) = decode[T](base64decode(s)).fold(Failure(_), Success(_))
+  override def decrypt[T: Reads](s: String) = Try(Json.parse(base64decode(s)).validate[T].get)
 }
 
 class JwtCommandCrypto(val key: String, val algo: JwtHmacAlgorithm = JwtAlgorithm.HS256) extends CredentialsCommandCrypto {
 
-  override def encrypt[T: Encoder](cmd: T) = JwtCirce.encode(cmd.asJson, key, algo)
+  override def encrypt[T: Writes](cmd: T) = JwtJson.encode(Json.toJson(cmd).toString(), key, algo)
 
-  override def decrypt[T: Decoder](s: String) = JwtCirce.decodeJson(s, key, Seq(algo)).flatMap(_.as[T].fold(Failure(_), Success(_)))
+  override def decrypt[T: Reads](s: String) =
+    JwtJson.decodeJson(s, key, Seq(algo))
+      .flatMap(o ⇒ o.validate[T].asEither.fold[Try[T]](fa ⇒ Failure(JsonParseError(JsError.toJson(fa))), t ⇒ Success(t)))
 
 }

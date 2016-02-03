@@ -1,5 +1,7 @@
 package auth.protocol
 
+import play.api.libs.json.JsObject
+
 sealed abstract class AuthError(val code: String, val desc: String, val statusCode: Int = 500) extends Throwable {
   override def getMessage = s"Auth Error $code($statusCode): $desc"
 }
@@ -33,4 +35,6 @@ object AuthError {
   object IdentityNotFound extends AuthError("auth.identityNotFound", "Cannot find identity by id", 404)
 
   case class ProviderNotFound(provider: String) extends AuthError("auth.providerNotFound", s"Cannot find provider $provider", 404)
+
+  case class JsonParseError(data: JsObject) extends AuthError("auth.parseError", s"Parse error ${data.toString()}", 400)
 }

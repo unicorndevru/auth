@@ -11,6 +11,8 @@ version := authV
 
 val reactiveMongoVersion = "0.11.9"
 
+val akkaHttpV = "2.0.2"
+
 scalaVersion := "2.11.7"
 
 val gitHeadCommitSha = settingKey[String]("current git commit SHA")
@@ -43,24 +45,16 @@ lazy val `auth` = (project in file("."))
   .dependsOn(`auth-testkit`)
   .aggregate(`auth-testkit`)
 
-val akkaHttpV = "2.0.2"
-
-val circeV = "0.2.1"
-
 lazy val `auth-akka` = (project in file("akka")).settings(commons: _*).settings(
   name := "auth-akka",
   version := authV + "." + gitHeadCommitSha.value,
   libraryDependencies ++= Seq(
-    "com.pauldijou" %% "jwt-circe" % "0.5.0",
+    "com.pauldijou" %% "jwt-play-json" % "0.5.0",
     "org.mindrot" % "jbcrypt" % "0.3m",
-    "io.circe" %% "circe-core" % circeV,
-    "io.circe" %% "circe-generic" % circeV,
-    "io.circe" %% "circe-parse" % circeV,
     "com.typesafe.akka" %% "akka-slf4j" % "2.4.1",
     "com.typesafe.akka" %% "akka-stream-experimental" % akkaHttpV,
     "com.typesafe.akka" %% "akka-http-experimental" % akkaHttpV,
-    "de.heikoseeberger" %% "akka-http-circe" % "1.4.1",
-    "org.spire-math" %% "cats-core" % "0.3.0"
+    "de.heikoseeberger" %% "akka-http-play-json" % "1.4.2"
   )
 )
 
@@ -68,8 +62,8 @@ lazy val `auth-mongo` = (project in file("auth-mongo")).settings(commons: _*).se
   name := "auth-mongo",
   version := authV + "." + gitHeadCommitSha.value,
   libraryDependencies ++= Seq(
-    "org.reactivemongo" %% "reactivemongo" % reactiveMongoVersion % Provided,
-    "org.reactivemongo" %% "reactivemongo-extensions-bson" % "0.11.7.play24" % Provided
+    "org.reactivemongo" %% "reactivemongo" % reactiveMongoVersion,
+    "org.reactivemongo" %% "reactivemongo-extensions-bson" % "0.11.7.play24"
   )
 ).dependsOn(`auth-akka`).aggregate(`auth-akka`)
 

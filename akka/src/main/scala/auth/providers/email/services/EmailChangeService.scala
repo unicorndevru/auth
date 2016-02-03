@@ -2,6 +2,7 @@ package auth.providers.email.services
 
 import auth.api._
 import auth.data.identity._
+import auth.handlers.AuthJsonWrites
 import auth.protocol.AuthUserId
 import auth.protocol.identities.UserIdentitiesFilter
 import auth.providers.email.PasswordHasherService
@@ -11,8 +12,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.Random
 
-import io.circe.generic.auto._
-
 class EmailChangeService(
     authUsersService:      AuthUsersService,
     userIdentityService:   UserIdentitiesService,
@@ -21,6 +20,8 @@ class EmailChangeService(
     commandCryptoService:  CredentialsCommandCrypto,
     authMailsService:      AuthMailsService
 ) {
+
+  import AuthJsonWrites.changeEmailCommandWrites
 
   def start(userId: AuthUserId, newEmail: String): Future[Unit] =
     Future.successful(sendHash(newEmail, userId, generateHash(newEmail, userId)))

@@ -9,14 +9,14 @@ import auth.directives._
 import auth.protocol._
 import auth.providers.email.EmailPasswordServices
 import auth.services.AuthService
-import de.heikoseeberger.akkahttpcirce.CirceSupport
-import io.circe.Decoder
+import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
+import play.api.libs.json.Reads
 
 import scala.concurrent.ExecutionContext
 import scala.util.Success
 
 class AuthActionsHandler(crypt: CredentialsCommandCrypto, service: AuthService, emailPasswordServices: EmailPasswordServices, override val authParams: AuthParams)(implicit ec: ExecutionContext, mat: Materializer)
-    extends CirceSupport with AuthPermissionsDirectives with AuthCirceEncoders with AuthCirceDecoders {
+    extends PlayJsonSupport with AuthPermissionsDirectives with AuthJsonWrites with AuthJsonReads {
 
   override val authService = service
 
@@ -104,14 +104,14 @@ class AuthActionsHandler(crypt: CredentialsCommandCrypto, service: AuthService, 
       }
     }
 
-  def authTokenCommand[T: Decoder, Y <: TokenCommand: Decoder]: Directive1[(T, Y)] = entity(as[Y]).flatMap { tokenHolder ⇒
+  def authTokenCommand[T: Reads, Y <: TokenCommand: Reads]: Directive1[(T, Y)] = entity(as[Y]).flatMap { tokenHolder ⇒
     crypt.decrypt[T](tokenHolder.token) match {
       case Success(tokenCommand) ⇒ provide((tokenCommand, tokenHolder))
       case _                     ⇒ failWith(AuthError.WrongToken)
     }
   }
 
-  def authTokenExpirableCommand[T <: ExpirableCommand: Decoder, Y <: TokenCommand: Decoder](millisToLive: Long = 86400000): Directive1[(T, Y)] =
+  def authTokenExpirableCommand[T <: ExpirableCommand: Reads, Y <: TokenCommand: Reads](millisToLive: Long = 86400000): Directive1[(T, Y)] =
     authTokenCommand[T, Y].flatMap { cmd ⇒
       if (cmd._1.isExpired(millisToLive)) {
         failWith(AuthError.TardyToken)

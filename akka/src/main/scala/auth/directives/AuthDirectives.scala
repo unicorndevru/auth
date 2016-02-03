@@ -4,19 +4,16 @@ import java.time.Instant
 
 import akka.http.scaladsl.model.headers.{ Authorization, OAuth2BearerToken }
 import akka.http.scaladsl.server.Directives._
-import akka.http.scaladsl.server.directives.Credentials
 import akka.http.scaladsl.server.{ AuthorizationFailedRejection, Directive0, Directive1 }
 import auth.protocol.{ AuthError, AuthStatus, AuthUserId }
 import auth.services.AuthService
-import io.circe._
-import io.circe.generic.semiauto._
-import io.circe.jawn.{ parse ⇒ jawnParse }
-import io.circe.syntax._
+import play.api.libs.json.Json
 import pdi.jwt.algorithms.JwtHmacAlgorithm
-import pdi.jwt.{ JwtAlgorithm, JwtCirce, JwtClaim }
+import pdi.jwt.{ JwtJson, JwtAlgorithm, JwtClaim }
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.util.Try
 
 case class AuthParams(
   secretKey: String,
@@ -32,8 +29,7 @@ case class AuthClaimData(
 )
 
 object AuthClaimData {
-  implicit val decoder: Decoder[AuthClaimData] = deriveFor[AuthClaimData].decoder
-  implicit val encoder: Encoder[AuthClaimData] = deriveFor[AuthClaimData].encoder
+  implicit val fmt = Json.format[AuthClaimData]
 }
 
 trait AuthDirectives {
@@ -45,7 +41,7 @@ trait AuthDirectives {
     case Some(a) ⇒
       provide(a.credentials match {
         case t: OAuth2BearerToken ⇒
-          JwtCirce.decode(t.token, secretKey, Seq(JwtAlgorithm.HS256))
+          JwtJson.decode(t.token, secretKey, Seq(JwtAlgorithm.HS256))
             .filter(claim ⇒
               issuer.fold(claim.isValid)(iss ⇒
                 audience.fold(claim.isValid(iss))(aud ⇒ claim.isValid(iss, aud)))
@@ -58,8 +54,7 @@ trait AuthDirectives {
                 originUserId = None
               )
 
-              jawnParse(claim.content).flatMap(_.as[AuthClaimData]).fold(
-                _ ⇒ s,
+              Try(Json.parse(claim.content).validate[AuthClaimData]).toOption.flatMap(_.asOpt).fold(s)(
                 d ⇒ s.copy(
                   roles = d.r,
                   originUserId = d.o.map(AuthUserId)
@@ -103,10 +98,10 @@ trait AuthDirectives {
       subject = Some(s.userId.id),
       issuer = issuer,
       audience = audience,
-      content = AuthClaimData(r = s.roles.distinct, o = s.originUserId.map(_.id)).asJson.noSpaces
+      content = Json.toJson(AuthClaimData(r = s.roles.distinct, o = s.originUserId.map(_.id))).toString()
     )
 
-    val token = JwtCirce.encode(claim, secretKey, algo)
+    val token = JwtJson.encode(claim, secretKey, algo)
 
     respondWithHeader(Authorization(OAuth2BearerToken(token)))
   }

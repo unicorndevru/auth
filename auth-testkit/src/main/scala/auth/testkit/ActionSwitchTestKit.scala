@@ -3,9 +3,6 @@ package auth.testkit
 import akka.http.scaladsl.model.StatusCodes
 import auth.protocol.{ SwitchUserCommand, AuthStatus, AuthByCredentials }
 
-import io.circe._
-import io.circe.generic.auto._
-
 trait ActionSwitchTestKit {
   self: AuthHandlerTestKit ⇒
   "auth action switch handler" should {

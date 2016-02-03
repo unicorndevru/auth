@@ -6,20 +6,29 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.{ RouteTestTimeout, ScalatestRouteTest }
 import auth.AuthServicesComposition
-import auth.handlers.{ AuthExceptionHandler, AuthHandler }
+import auth.handlers.{ AuthJsonReads, AuthJsonWrites, AuthExceptionHandler, AuthHandler }
 import auth.protocol._
-import de.heikoseeberger.akkahttpcirce.CirceSupport
+import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
 import org.scalatest._
 import org.scalatest.concurrent.{ Eventually, ScalaFutures }
 import org.scalatest.time.{ Seconds, Span }
+import play.api.libs.json.Json
 
 import scala.concurrent.duration.FiniteDuration
 
-import io.circe._
-import io.circe.generic.auto._
-
 trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers with ScalaFutures with TryValues
-    with OptionValues with BeforeAndAfter with Eventually with CirceSupport {
+    with OptionValues with BeforeAndAfter with Eventually with PlayJsonSupport with AuthJsonWrites with AuthJsonReads {
+
+  implicit val authByCredentialsWrites = Json.writes[AuthByCredentials]
+  implicit val authStatusReads = Json.reads[AuthStatus]
+  implicit val switchUserCommandWrites = Json.writes[SwitchUserCommand]
+  implicit val passwordChangeWrites = Json.writes[PasswordChange]
+  implicit val emailVerifyTokenWrites = Json.writes[EmailVerifyToken]
+  implicit val startPasswordRecoverWrites = Json.writes[StartPasswordRecover]
+  implicit val checkPasswordRecoverTokenWrites = Json.writes[CheckPasswordRecoverToken]
+  implicit val finishPasswordRecoverWrites = Json.writes[FinishPasswordRecover]
+  implicit val startEmailChangeWrites = Json.writes[StartEmailChange]
+  implicit val finishEmailChangeWrites = Json.writes[FinishEmailChange]
 
   implicit override val patienceConfig = PatienceConfig(timeout = Span(5, Seconds))
   implicit val routeTimeout = RouteTestTimeout(FiniteDuration(5, TimeUnit.SECONDS))
