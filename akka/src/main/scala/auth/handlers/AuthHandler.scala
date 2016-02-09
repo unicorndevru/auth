@@ -34,7 +34,7 @@ class AuthHandler(val composition: AuthServicesComposition)(implicit ec: Executi
     }
 
   val route =
-    pathPrefix("auth") {
+    (handleExceptions(AuthExceptionHandler.generic) & pathPrefix("auth")) {
       pathEndOrSingleSlash {
         (get & userRequired) { status ⇒
           complete(status)
