@@ -7,8 +7,6 @@ name := "auth"
 
 val authV = "0.4.0"
 
-version := authV
-
 val reactiveMongoVersion = "0.11.9"
 
 val akkaHttpV = "2.0.2"
@@ -36,7 +34,8 @@ val commons = Seq(
   gitHeadCommitSha in ThisBuild := Process("git rev-parse --short HEAD").lines.head,
   licenses +=("MIT", url("http://opensource.org/licenses/MIT")),
   bintrayPackageLabels := Seq("scala", "play", "api"),
-  bintrayRepository := "generic"
+  bintrayRepository := "generic",
+  version := authV + "." + gitHeadCommitSha.value
 ) ++ commonScalariform
 
 commons

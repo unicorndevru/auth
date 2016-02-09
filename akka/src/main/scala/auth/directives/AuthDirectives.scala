@@ -69,10 +69,14 @@ trait AuthDirectives {
       provide(None)
   }
 
+  val userStringIdAware: Directive1[Option[String]] = userAware.map(_.map(_.userId.id))
+
   val userRequired: Directive1[AuthStatus] = userAware.flatMap {
     case Some(a) ⇒ provide(a)
     case None    ⇒ failWith(AuthError.Unauthorized)
   }
+
+  val userStringIdRequired: Directive1[String] = userRequired.map(_.userId.id)
 
   def rolesRequired(s: AuthStatus, rs: String*): Directive1[AuthStatus] =
     if (rs.forall(rs.contains)) {
