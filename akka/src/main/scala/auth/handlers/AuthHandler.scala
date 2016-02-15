@@ -6,7 +6,7 @@ import akka.stream.Materializer
 import auth.AuthServicesComposition
 import auth.directives.AuthDirectives
 import auth.protocol._
-import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
+import utils.http.PlayJsonSupport
 
 import scala.concurrent.ExecutionContext
 
@@ -34,7 +34,7 @@ class AuthHandler(val composition: AuthServicesComposition)(implicit ec: Executi
     }
 
   val route =
-    (handleExceptions(AuthExceptionHandler.generic) & pathPrefix("auth")) {
+    pathPrefix("auth") {
       pathEndOrSingleSlash {
         (get & userRequired) { status ⇒
           complete(status)
@@ -48,7 +48,9 @@ class AuthHandler(val composition: AuthServicesComposition)(implicit ec: Executi
         } ~ put {
           entity(as[AuthByToken])(register) ~ entity(as[AuthByCredentials])(register)
         }
-      } ~ new IdentitiesHandler(userIdentityService, authParams).route ~ new AuthActionsHandler(composition.credentialsCommandCrypto, service, emailPasswordServices, authParams).route
+      } ~
+        new IdentitiesHandler(userIdentityService, authParams).route ~
+        new AuthActionsHandler(composition.credentialsCommandCrypto, service, emailPasswordServices, authParams).route
     }
 
 }

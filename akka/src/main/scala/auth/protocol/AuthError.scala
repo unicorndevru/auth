@@ -1,40 +1,37 @@
 package auth.protocol
 
 import play.api.libs.json.JsObject
-
-sealed abstract class AuthError(val code: String, val desc: String, val statusCode: Int = 500) extends Throwable {
-  override def getMessage = s"Auth Error $code($statusCode): $desc"
-}
+import utils.http.protocol.ApiError
 
 object AuthError {
 
-  object Unauthorized extends AuthError("auth.unauthorized", "Not authenticated", 401)
+  object Unauthorized extends ApiError("auth.unauthorized", "Not authenticated", 401)
 
-  object WrongPassword extends AuthError("auth.wrongPassword", "Wrong password", 401)
+  object WrongPassword extends ApiError("auth.wrongPassword", "Wrong password", 401)
 
-  object WrongToken extends AuthError("auth.wrongToken", "Wrong token", 401)
+  object WrongToken extends ApiError("auth.wrongToken", "Wrong token", 401)
 
-  object TardyToken extends AuthError("auth.tardyToken", "Token is tardy", 401)
+  object TardyToken extends ApiError("auth.tardyToken", "Token is tardy", 401)
 
-  object UserIdNotFound extends AuthError("auth.userIdNotFound", "Corrupted identity", 401)
+  object UserIdNotFound extends ApiError("auth.userIdNotFound", "Corrupted identity", 401)
 
-  object WrongAuthObject extends AuthError("auth.wrongAuthorizeObject", "Cannot authorize with provided payload", 401)
+  object WrongAuthObject extends ApiError("auth.wrongAuthorizeObject", "Cannot authorize with provided payload", 401)
 
-  object InvalidCredentials extends AuthError("auth.invalidCredentials", "Credentials you provide are not valid", 401)
+  object InvalidCredentials extends ApiError("auth.invalidCredentials", "Credentials you provide are not valid", 401)
 
-  object DuplicateIdentities extends AuthError("auth.cannotCreateIdentity", "Cannot create user identity: identity already exists", 409)
+  object DuplicateIdentities extends ApiError("auth.cannotCreateIdentity", "Cannot create user identity: identity already exists", 409)
 
-  object UserHaveNoEmails extends AuthError("auth.userHaveNoEmails", "Cannot perform action: user have no emails", 412)
+  object UserHaveNoEmails extends ApiError("auth.userHaveNoEmails", "Cannot perform action: user have no emails", 412)
 
-  object UserEmailNotVerified extends AuthError("auth.emailNotVerified", "Cannot perform action: user have no verified emails", 412)
+  object UserEmailNotVerified extends ApiError("auth.emailNotVerified", "Cannot perform action: user have no verified emails", 412)
 
-  object UserHaveNoPassword extends AuthError("auth.noPasswordIsSet", "Cannot perform action: user have no password identities", 412)
+  object UserHaveNoPassword extends ApiError("auth.noPasswordIsSet", "Cannot perform action: user have no password identities", 412)
 
-  object UserAlreadyRegistered extends AuthError("auth.userAlreadyRegistered", "User already registered", 409)
+  object UserAlreadyRegistered extends ApiError("auth.userAlreadyRegistered", "User already registered", 409)
 
-  object IdentityNotFound extends AuthError("auth.identityNotFound", "Cannot find identity by id", 404)
+  object IdentityNotFound extends ApiError("auth.identityNotFound", "Cannot find identity by id", 404)
 
-  case class ProviderNotFound(provider: String) extends AuthError("auth.providerNotFound", s"Cannot find provider $provider", 404)
+  case class ProviderNotFound(provider: String) extends ApiError("auth.providerNotFound", s"Cannot find provider $provider", 404)
 
-  case class JsonParseError(data: JsObject) extends AuthError("auth.parseError", s"Parse error ${data.toString()}", 400)
+  case class JsonParseError(data: JsObject) extends ApiError("auth.parseError", s"Parse error ${data.toString()}", 400)
 }

@@ -33,7 +33,7 @@ val commons = Seq(
   ),
   gitHeadCommitSha in ThisBuild := Process("git rev-parse --short HEAD").lines.head,
   licenses +=("MIT", url("http://opensource.org/licenses/MIT")),
-  bintrayPackageLabels := Seq("scala", "play", "api"),
+  bintrayPackageLabels := Seq("scala", "akka-http", "auth", "security", "api"),
   bintrayRepository := "generic",
   version := authV + "." + gitHeadCommitSha.value
 ) ++ commonScalariform
@@ -53,7 +53,7 @@ lazy val `auth-akka` = (project in file("akka")).settings(commons: _*).settings(
     "com.typesafe.akka" %% "akka-slf4j" % "2.4.1",
     "com.typesafe.akka" %% "akka-stream-experimental" % akkaHttpV,
     "com.typesafe.akka" %% "akka-http-experimental" % akkaHttpV,
-    "de.heikoseeberger" %% "akka-http-play-json" % "1.4.2"
+    "ru.unicorndev" %% "utils-http" % "0.1.b3803f7"
   )
 )
 

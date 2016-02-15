@@ -7,7 +7,7 @@ import auth.api.UserIdentitiesService
 import auth.data.identity.UserIdentity
 import auth.protocol._
 import auth.protocol.identities.{ UserIdentitiesFilter, AuthIdentityId, AuthIdentity, AuthIdentitiesList }
-import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
+import utils.http.PlayJsonSupport
 
 import scala.concurrent.{ ExecutionContext, Future }
 

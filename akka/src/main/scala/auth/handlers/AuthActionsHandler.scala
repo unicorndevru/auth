@@ -9,8 +9,8 @@ import auth.directives._
 import auth.protocol._
 import auth.providers.email.EmailPasswordServices
 import auth.services.AuthService
-import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
 import play.api.libs.json.Reads
+import utils.http.PlayJsonSupport
 
 import scala.concurrent.ExecutionContext
 import scala.util.Success
