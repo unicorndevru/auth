@@ -8,7 +8,7 @@ import akka.http.scaladsl.testkit.{ RouteTestTimeout, ScalatestRouteTest }
 import auth.AuthServicesComposition
 import auth.handlers.{ AuthJsonReads, AuthJsonWrites, AuthExceptionHandler, AuthHandler }
 import auth.protocol._
-import utils.http.PlayJsonSupport
+import utils.http.{PlayJsonSupport, ApiErrorHandler}
 import org.scalatest._
 import org.scalatest.concurrent.{ Eventually, ScalaFutures }
 import org.scalatest.time.{ Seconds, Span }
@@ -35,7 +35,7 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
 
   val composition: AuthServicesComposition with InMemoryAuthMailsProvider
 
-  implicit val exceptionHandler = AuthExceptionHandler.generic
+  implicit val exceptionHandler = ApiErrorHandler.generic
 
   lazy val route = Route.seal(new AuthHandler(composition).route)
 
