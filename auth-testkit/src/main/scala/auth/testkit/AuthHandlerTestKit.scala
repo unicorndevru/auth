@@ -6,7 +6,7 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.{ RouteTestTimeout, ScalatestRouteTest }
 import auth.AuthServicesComposition
-import auth.handlers.{ AuthJsonReads, AuthJsonWrites, AuthExceptionHandler, AuthHandler }
+import auth.handlers.{ AuthJsonReads, AuthJsonWrites, AuthHandler }
 import auth.protocol._
 import utils.http.{PlayJsonSupport, ApiErrorHandler}
 import org.scalatest._
