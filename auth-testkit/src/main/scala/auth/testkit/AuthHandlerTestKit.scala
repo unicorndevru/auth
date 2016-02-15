@@ -8,7 +8,7 @@ import akka.http.scaladsl.testkit.{ RouteTestTimeout, ScalatestRouteTest }
 import auth.AuthServicesComposition
 import auth.handlers.{ AuthJsonReads, AuthJsonWrites, AuthExceptionHandler, AuthHandler }
 import auth.protocol._
-import de.heikoseeberger.akkahttpplayjson.PlayJsonSupport
+import utils.http.PlayJsonSupport
 import org.scalatest._
 import org.scalatest.concurrent.{ Eventually, ScalaFutures }
 import org.scalatest.time.{ Seconds, Span }
