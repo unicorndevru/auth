@@ -53,7 +53,7 @@ lazy val `auth-akka` = (project in file("akka")).settings(commons: _*).settings(
     "com.typesafe.akka" %% "akka-slf4j" % "2.4.1",
     "com.typesafe.akka" %% "akka-stream-experimental" % akkaHttpV,
     "com.typesafe.akka" %% "akka-http-experimental" % akkaHttpV,
-    "ru.unicorndev" %% "utils-http" % "0.1.b3803f7"
+    "ru.unicorndev" %% "utils-http" % "0.2.162b3ac"
   )
 )
 

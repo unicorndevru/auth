@@ -10,13 +10,12 @@ import auth.protocol._
 import auth.providers.email.EmailPasswordServices
 import auth.services.AuthService
 import play.api.libs.json.Reads
-import utils.http.PlayJsonSupport
 
 import scala.concurrent.ExecutionContext
 import scala.util.Success
 
 class AuthActionsHandler(crypt: CredentialsCommandCrypto, service: AuthService, emailPasswordServices: EmailPasswordServices, override val authParams: AuthParams)(implicit ec: ExecutionContext, mat: Materializer)
-    extends PlayJsonSupport with AuthPermissionsDirectives with AuthJsonWrites with AuthJsonReads {
+    extends AuthHandlerJson with AuthPermissionsDirectives {
 
   override val authService = service
 
@@ -24,41 +23,44 @@ class AuthActionsHandler(crypt: CredentialsCommandCrypto, service: AuthService, 
 
   import emailPasswordServices._
 
-  val switchRoute = (path("switch") & userRequired) { status ⇒
-    (post & entity(as[SwitchUserCommand])) { cmd ⇒
-      cmd.userId match {
-        case id if id == status.userId ⇒
-          respondWithAuth(status)(complete(status))
+  val switchRoute =
+    extractJsonMarshallingContext { implicit jsonCtx ⇒
+      (path("switch") & userRequired) { status ⇒
+        (post & entity(as[SwitchUserCommand])) { cmd ⇒
+          cmd.userId match {
+            case id if id == status.userId ⇒
+              respondWithAuth(status)(complete(status))
 
-        case id if status.originUserId.contains(id) ⇒
-          // always allow
-          onSuccess(service.getStatus(id)){ s ⇒
-            respondWithAuth(s)(complete(s))
-          }
+            case id if status.originUserId.contains(id) ⇒
+              // always allow
+              onSuccess(service.getStatus(id)) { s ⇒
+                respondWithAuth(s)(complete(s))
+              }
 
-        case id ⇒
-          permissionsRequired(status, "switch") { _ ⇒
-            onSuccess(service.getStatus(id)){ s ⇒
-              val st = s.copy(originUserId = status.originUserId orElse Some(status.userId))
-              respondWithAuth(st)(complete(st))
-            }
+            case id ⇒
+              permissionsRequired(status, "switch") { _ ⇒
+                onSuccess(service.getStatus(id)) { s ⇒
+                  val st = s.copy(originUserId = status.originUserId orElse Some(status.userId))
+                  respondWithAuth(st)(complete(st))
+                }
+              }
           }
-      }
-    } ~ delete {
-      status.originUserId match {
-        case Some(o) ⇒
-          onSuccess(service.getStatus(o)){ s ⇒
-            respondWithAuth(s)(complete(s))
-          }
+        } ~ delete {
+          status.originUserId match {
+            case Some(o) ⇒
+              onSuccess(service.getStatus(o)) { s ⇒
+                respondWithAuth(s)(complete(s))
+              }
 
-        case None ⇒
-          complete(status)
+            case None ⇒
+              complete(status)
+          }
+        }
       }
     }
-  }
 
   val route =
-    pathPrefix("actions") {
+    (pathPrefix("actions") & extractJsonMarshallingContext) { implicit jsonCtx ⇒
       switchRoute ~ post {
         (path("changePassword") & userRequired & entity(as[PasswordChange])) { (status, pc) ⇒
           onSuccess(passwordChangeService.changePassword(status.userId, pc.oldPass.getOrElse(""), pc.newPass)) { _ ⇒
@@ -95,7 +97,7 @@ class AuthActionsHandler(crypt: CredentialsCommandCrypto, service: AuthService, 
             complete(emptyResponse)
           }
         } ~ (path("finishEmailChange") & authTokenExpirableCommand[ChangeEmailCommand, FinishEmailChange]()) { cmd ⇒
-          onSuccess(emailChangeService.finish(cmd._1.userId, cmd._1.newEmail).flatMap(service.getStatus)){ authStatus ⇒
+          onSuccess(emailChangeService.finish(cmd._1.userId, cmd._1.newEmail).flatMap(service.getStatus)) { authStatus ⇒
             respondWithAuth(authStatus) {
               complete(authStatus)
             }

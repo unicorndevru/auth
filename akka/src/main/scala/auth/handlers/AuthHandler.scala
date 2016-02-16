@@ -6,17 +6,17 @@ import akka.stream.Materializer
 import auth.AuthServicesComposition
 import auth.directives.AuthDirectives
 import auth.protocol._
-import utils.http.PlayJsonSupport
+import utils.http.json.JsonMarshallingContext
 
 import scala.concurrent.ExecutionContext
 
-class AuthHandler(val composition: AuthServicesComposition)(implicit ec: ExecutionContext, mat: Materializer) extends PlayJsonSupport with AuthDirectives with AuthJsonWrites with AuthJsonReads {
+class AuthHandler(val composition: AuthServicesComposition)(implicit ec: ExecutionContext, mat: Materializer) extends AuthHandlerJson with AuthDirectives {
 
   import composition.{ authService ⇒ service, emailPasswordServices, userIdentityService }
 
   override val authParams = composition.authParams
 
-  def authorize(cmd: AuthorizeCommand) =
+  def authorize(cmd: AuthorizeCommand)(implicit jsonCtx: JsonMarshallingContext) =
     onSuccess(service.authorize(cmd)) {
       case Some(s) ⇒
         respondWithAuth(s) {
@@ -26,7 +26,7 @@ class AuthHandler(val composition: AuthServicesComposition)(implicit ec: Executi
         failWith(AuthError.InvalidCredentials)
     }
 
-  def register(cmd: AuthorizeCommand) =
+  def register(cmd: AuthorizeCommand)(implicit jsonCtx: JsonMarshallingContext) =
     onSuccess(service.register(cmd)) { s ⇒
       respondWithAuth(s) {
         complete(StatusCodes.Created → s)
@@ -34,7 +34,7 @@ class AuthHandler(val composition: AuthServicesComposition)(implicit ec: Executi
     }
 
   val route =
-    pathPrefix("auth") {
+    (pathPrefix("auth") & extractJsonMarshallingContext) { implicit jsonCtx ⇒
       pathEndOrSingleSlash {
         (get & userRequired) { status ⇒
           complete(status)
