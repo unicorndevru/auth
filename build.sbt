@@ -9,7 +9,7 @@ val authV = "0.4.0"
 
 val reactiveMongoVersion = "0.11.9"
 
-val akkaHttpV = "2.0.2"
+val akkaHttpV = "2.0.3"
 
 scalaVersion := "2.11.7"
 
