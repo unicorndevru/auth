@@ -36,7 +36,7 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
 
   val composition: AuthServicesComposition with InMemoryAuthMailsProvider
 
-  implicit val exceptionHandler = ApiErrorHandler.generic
+  import ApiErrorHandler._
 
   lazy val route = Route.seal(new AuthHandler(composition).route)
 
