@@ -2,14 +2,14 @@ package auth.directives
 
 import java.time.Instant
 
-import akka.http.scaladsl.model.headers.{ Authorization, OAuth2BearerToken }
+import akka.http.scaladsl.model.headers.{ Authorization, CustomHeader, OAuth2BearerToken }
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{ AuthorizationFailedRejection, Directive0, Directive1 }
 import auth.protocol.{ AuthError, AuthStatus, AuthUserId }
 import auth.services.AuthService
-import play.api.libs.json.Json
 import pdi.jwt.algorithms.JwtHmacAlgorithm
-import pdi.jwt.{ JwtJson, JwtAlgorithm, JwtClaim }
+import pdi.jwt.{ JwtAlgorithm, JwtClaim, JwtJson }
+import play.api.libs.json.Json
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -28,6 +28,16 @@ case class AuthClaimData(
   o: Option[String]
 )
 
+case class SetAuthorization(token: String) extends CustomHeader {
+  override def value() = s"Bearer $token"
+
+  override def name() = "Authorization"
+
+  override def renderInResponses() = true
+
+  override def renderInRequests() = true
+}
+
 object AuthClaimData {
   implicit val fmt = Json.format[AuthClaimData]
 }
@@ -37,7 +47,7 @@ trait AuthDirectives {
 
   import authParams._
 
-  val userAware: Directive1[Option[AuthStatus]] = optionalHeaderValueByType(classOf[Authorization]).flatMap{
+  val userAware: Directive1[Option[AuthStatus]] = optionalHeaderValueByType(classOf[Authorization]).flatMap {
     case Some(a) ⇒
       provide(a.credentials match {
         case t: OAuth2BearerToken ⇒
@@ -107,7 +117,7 @@ trait AuthDirectives {
 
     val token = JwtJson.encode(claim, secretKey, algo)
 
-    respondWithHeader(Authorization(OAuth2BearerToken(token)))
+    respondWithHeader(SetAuthorization(token))
   }
 }
 

@@ -7,9 +7,9 @@ name := "auth"
 
 val authV = "0.4.0"
 
-val reactiveMongoVersion = "0.11.9"
+val akkaV = "2.4.2"
 
-val akkaHttpV = "2.0.3"
+val reactiveMongoVersion = "0.11.9"
 
 scalaVersion := "2.11.7"
 
@@ -50,10 +50,8 @@ lazy val `auth-akka` = (project in file("akka")).settings(commons: _*).settings(
   libraryDependencies ++= Seq(
     "com.pauldijou" %% "jwt-play-json" % "0.5.0",
     "org.mindrot" % "jbcrypt" % "0.3m",
-    "com.typesafe.akka" %% "akka-slf4j" % "2.4.1",
-    "com.typesafe.akka" %% "akka-stream-experimental" % akkaHttpV,
-    "com.typesafe.akka" %% "akka-http-experimental" % akkaHttpV,
-    "ru.unicorndev" %% "utils-http" % "0.2.29606d9"
+    "com.typesafe.akka" %% "akka-slf4j" % akkaV,
+    "ru.unicorndev" %% "utils-http" % "0.2.4f8aff5"
   )
 )
 
@@ -70,7 +68,7 @@ lazy val `auth-testkit` = (project in file("auth-testkit")).settings(commons: _*
   name := "auth-testkit",
   version := authV + "." + gitHeadCommitSha.value,
   libraryDependencies ++= Seq(
-    "com.typesafe.akka" %% "akka-http-testkit-experimental" % akkaHttpV,
+    "com.typesafe.akka" %% "akka-http-testkit" % akkaV,
     "org.scalatest" %% "scalatest" % "2.2.5",
     "junit" % "junit" % "4.12",
     "de.flapdoodle.embed" % "de.flapdoodle.embed.mongo" % "1.50.1" % Test,
