@@ -2,7 +2,7 @@ package auth.directives
 
 import java.time.Instant
 
-import akka.http.scaladsl.model.headers.{ Authorization, CustomHeader, OAuth2BearerToken }
+import akka.http.scaladsl.model.headers.CustomHeader
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{ AuthorizationFailedRejection, Directive0, Directive1 }
 import auth.protocol.{ AuthError, AuthStatus, AuthUserId }
@@ -47,11 +47,14 @@ trait AuthDirectives {
 
   import authParams._
 
-  val userAware: Directive1[Option[AuthStatus]] = optionalHeaderValueByType(classOf[Authorization]).flatMap {
-    case Some(a) ⇒
-      provide(a.credentials match {
-        case t: OAuth2BearerToken ⇒
-          JwtJson.decode(t.token, secretKey, Seq(JwtAlgorithm.HS256))
+  val userAware: Directive1[Option[AuthStatus]] =
+    optionalHeaderValueByName("Authorization")
+      .map(_.filter(_.startsWith("Bearer ")).map(_.stripPrefix("Bearer ")))
+      .map {
+
+        case Some(token) ⇒
+
+          JwtJson.decode(token, secretKey, Seq(JwtAlgorithm.HS256))
             .filter(claim ⇒
               issuer.fold(claim.isValid)(iss ⇒
                 audience.fold(claim.isValid(iss))(aud ⇒ claim.isValid(iss, aud)))
@@ -72,12 +75,9 @@ trait AuthDirectives {
               )
             }
 
-        case t ⇒
+        case _ ⇒
           None
-      })
-    case None ⇒
-      provide(None)
-  }
+      }
 
   val userStringIdAware: Directive1[Option[String]] = userAware.map(_.map(_.userId.id))
 

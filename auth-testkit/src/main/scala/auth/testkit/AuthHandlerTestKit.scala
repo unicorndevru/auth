@@ -6,13 +6,13 @@ import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Route
 import akka.http.scaladsl.testkit.{ RouteTestTimeout, ScalatestRouteTest }
 import auth.AuthServicesComposition
-import auth.handlers.{ AuthJsonReads, AuthJsonWrites, AuthHandler }
+import auth.handlers.{ AuthHandler, AuthJsonReads, AuthJsonWrites }
 import auth.protocol._
-import utils.http.ApiErrorHandler
 import org.scalatest._
 import org.scalatest.concurrent.{ Eventually, ScalaFutures }
 import org.scalatest.time.{ Seconds, Span }
 import play.api.libs.json.Json
+import utils.http.ApiErrorHandler
 import utils.http.json.PlayJsonSupport
 
 import scala.concurrent.duration.FiniteDuration
@@ -141,7 +141,7 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
 
       val payload = letters.head._3.asInstanceOf[(String, String)]
 
-      payload._1 should equal ("test22@me.com")
+      payload._1 should equal("test22@me.com")
 
       Post("/auth/actions/verifyEmail", EmailVerifyToken(payload._2)) ~> route ~> check {
         status should be(StatusCodes.NoContent)
@@ -238,14 +238,14 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
 
       val payload = letters.head._3.asInstanceOf[(String, String)]
 
-      payload._1 should equal ("newEmail@me.com")
+      payload._1 should equal("newEmail@me.com")
 
       val st2 = Post("/auth/actions/finishEmailChange", FinishEmailChange(payload._2)) ~> route ~> check {
         status should be(StatusCodes.OK)
         responseAs[AuthStatus]
       }
 
-      st.userId should equal (st2.userId)
+      st.userId should equal(st2.userId)
     }
   }
 }
