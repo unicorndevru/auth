@@ -111,9 +111,6 @@ class MongoUserIdentitiesDao(db: DB) extends UserIdentitiesDao {
       .cursor[UserIdentityRecord]()
       .collect[List]().map(_.map(recordToData))
 
-  private def failOrObj[T](obj: T)(err: WriteResult): Future[T] =
-    if (err.inError) Future failed err else Future successful obj
-
   private def parseObjectId(id: String): Future[BSONObjectID] =
     BSONObjectID.parse(id).toOption match {
       case Some(parsedId) ⇒

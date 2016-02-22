@@ -9,7 +9,7 @@ val authV = "0.4.0"
 
 val akkaV = "2.4.2"
 
-val reactiveMongoVersion = "0.11.9"
+val reactiveMongoVersion = "0.11.10"
 
 scalaVersion := "2.11.7"
 
@@ -71,7 +71,7 @@ lazy val `auth-testkit` = (project in file("auth-testkit")).settings(commons: _*
     "com.typesafe.akka" %% "akka-http-testkit" % akkaV,
     "org.scalatest" %% "scalatest" % "2.2.5",
     "junit" % "junit" % "4.12",
-    "de.flapdoodle.embed" % "de.flapdoodle.embed.mongo" % "1.50.1" % Test,
+    "de.flapdoodle.embed" % "de.flapdoodle.embed.mongo" % "1.50.2" % Test,
     "org.reactivemongo" %% "reactivemongo" % reactiveMongoVersion % Test,
     "org.reactivemongo" %% "reactivemongo-extensions-bson" % "0.11.7.play24" % Test
   )
