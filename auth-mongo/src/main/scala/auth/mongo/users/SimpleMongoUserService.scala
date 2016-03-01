@@ -31,7 +31,7 @@ class SimpleMongoUserService(db: DB) extends AuthUsersService {
     dao.updateById(id.id, $doc("email" → email, "avatarUrl" → avatar)).filter(_.ok).map(_ ⇒ id)
   }
 
-  override def getRoles(id: AuthUserId) = Future.successful(Seq.empty)
+  override def getRoles(id: AuthUserId) = Future.successful(Set.empty)
 
   override def findEmail(id: AuthUserId) =
     dao.findById(id.id).map(_.flatMap(_.email))

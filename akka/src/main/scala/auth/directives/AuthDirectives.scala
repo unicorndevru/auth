@@ -24,7 +24,7 @@ case class AuthParams(
 )
 
 case class AuthClaimData(
-  r: Seq[String],
+  r: Set[String],
   o: Option[String]
 )
 
@@ -63,7 +63,7 @@ trait AuthDirectives {
             .map { claim ⇒
               val s = AuthStatus(
                 userId = AuthUserId(claim.subject.get),
-                roles = Seq.empty,
+                roles = Set.empty,
                 originUserId = None
               )
 
@@ -112,7 +112,7 @@ trait AuthDirectives {
       subject = Some(s.userId.id),
       issuer = issuer,
       audience = audience,
-      content = Json.toJson(AuthClaimData(r = s.roles.distinct, o = s.originUserId.map(_.id))).toString()
+      content = Json.toJson(AuthClaimData(r = s.roles, o = s.originUserId.map(_.id))).toString()
     )
 
     val token = JwtJson.encode(claim, secretKey, algo)
@@ -126,7 +126,7 @@ trait AuthPermissionsDirectives extends AuthDirectives {
 
   def permissionsRequired(s: AuthStatus, ps: String*): Directive1[AuthStatus] =
     onSuccess(Future.traverse(s.roles)(authService.getRolePermissions)).flatMap { cps ⇒
-      val cs = cps.flatten.toSet
+      val cs = cps.flatten
 
       if (ps.forall(cs.contains)) {
         provide(s)

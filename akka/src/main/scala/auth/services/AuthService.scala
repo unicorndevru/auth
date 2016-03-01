@@ -25,7 +25,7 @@ class AuthService(
 
   import emailPasswordServices._
 
-  def getRolePermissions(role: String): Future[Seq[String]] = service.getRolePermissions(role)
+  def getRolePermissions(role: String): Future[Set[String]] = service.getRolePermissions(role)
 
   def getStatus(id: AuthUserId): Future[AuthStatus] =
     service.getRoles(id).map(rs ⇒ AuthStatus(id, rs, None))

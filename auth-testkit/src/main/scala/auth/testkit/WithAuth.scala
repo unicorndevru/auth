@@ -19,7 +19,7 @@ abstract class WithAuth(status: AuthStatus, params: AuthParams) {
     subject = Some(status.userId.id),
     issuer = issuer,
     audience = audience,
-    content = Json.toJson(AuthClaimData(r = status.roles.distinct, o = status.originUserId.map(_.id))).toString
+    content = Json.toJson(AuthClaimData(r = status.roles, o = status.originUserId.map(_.id))).toString
   )
 
   val token = JwtJson.encode(claim, secretKey, algo)

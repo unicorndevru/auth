@@ -51,7 +51,7 @@ lazy val `auth-akka` = (project in file("akka")).settings(commons: _*).settings(
     "com.pauldijou" %% "jwt-play-json" % "0.5.0",
     "org.mindrot" % "jbcrypt" % "0.3m",
     "com.typesafe.akka" %% "akka-slf4j" % akkaV,
-    "ru.unicorndev" %% "utils-http" % "0.2.4f8aff5"
+    "ru.unicorndev" %% "utils-http" % "0.2.9fd8ca8"
   )
 )
 
