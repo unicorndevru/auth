@@ -9,7 +9,7 @@ import scala.concurrent.Future
 
 class TestAuthUsersService extends AuthUsersService {
 
-  var users = TrieMap[AuthUserId, (CreateUser, Seq[String])]()
+  var users = TrieMap[AuthUserId, (CreateUser, Set[String])]()
 
   var id = 0
 
@@ -24,7 +24,7 @@ class TestAuthUsersService extends AuthUsersService {
   override def create(cmd: CreateUser) = {
     id += 1
     val aid = AuthUserId("user-" + id.toString)
-    users += (aid → (cmd, cmd.email.fold(Seq.empty[String])(_.split(',').toSeq)))
+    users += (aid → (cmd, cmd.email.fold(Set.empty[String])(_.split(',').toSet)))
     Future.successful(aid)
   }
 
