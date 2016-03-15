@@ -7,17 +7,17 @@ object AuthError {
 
   object Unauthorized extends ApiError("auth.unauthorized", "Not authenticated", 401)
 
-  object WrongPassword extends ApiError("auth.wrongPassword", "Wrong password", 401)
+  object WrongPassword extends ApiError("auth.wrongPassword", "Wrong password", 406)
 
-  object WrongToken extends ApiError("auth.wrongToken", "Wrong token", 401)
+  object WrongToken extends ApiError("auth.wrongToken", "Wrong token", 406)
 
-  object TardyToken extends ApiError("auth.tardyToken", "Token is tardy", 401)
+  object TardyToken extends ApiError("auth.tardyToken", "Token is tardy", 406)
 
   object UserIdNotFound extends ApiError("auth.userIdNotFound", "Corrupted identity", 401)
 
-  object WrongAuthObject extends ApiError("auth.wrongAuthorizeObject", "Cannot authorize with provided payload", 401)
+  object WrongAuthObject extends ApiError("auth.wrongAuthorizeObject", "Cannot authorize with provided payload", 406)
 
-  object InvalidCredentials extends ApiError("auth.invalidCredentials", "Credentials you provide are not valid", 401)
+  object InvalidCredentials extends ApiError("auth.invalidCredentials", "Credentials you provide are not valid", 406)
 
   object DuplicateIdentities extends ApiError("auth.cannotCreateIdentity", "Cannot create user identity: identity already exists", 409)
 

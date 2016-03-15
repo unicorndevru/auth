@@ -109,7 +109,7 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
       }
 
       Post("/auth", cr) ~> route ~> check {
-        status should be(StatusCodes.Unauthorized)
+        status should be(StatusCodes.NotAcceptable)
         header("Authorization") should be('empty)
       }
 
