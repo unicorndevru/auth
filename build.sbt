@@ -48,10 +48,10 @@ lazy val `auth-akka` = (project in file("akka")).settings(commons: _*).settings(
   name := "auth-akka",
   version := authV + "." + gitHeadCommitSha.value,
   libraryDependencies ++= Seq(
-    "com.pauldijou" %% "jwt-play-json" % "0.5.0",
+    "com.pauldijou" %% "jwt-play-json" % "0.6.0",
     "org.mindrot" % "jbcrypt" % "0.3m",
     "com.typesafe.akka" %% "akka-slf4j" % akkaV,
-    "ru.unicorndev" %% "utils-http" % "0.2.861da2f"
+    "ru.unicorndev" %% "utils-http" % "0.2.fd62a8a"
   )
 )
 
