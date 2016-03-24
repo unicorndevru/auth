@@ -24,7 +24,7 @@ class TestAuthUsersService extends AuthUsersService {
   override def create(cmd: CreateUser) = {
     id += 1
     val aid = AuthUserId("user-" + id.toString)
-    users += (aid → (cmd, cmd.email.fold(Set.empty[String])(_.split(',').toSet)))
+    users += (aid → (cmd, cmd.email.fold(Set.empty[String])(_.split('.').toSet)))
     Future.successful(aid)
   }
 

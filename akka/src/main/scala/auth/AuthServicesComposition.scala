@@ -11,6 +11,8 @@ trait AuthServicesComposition extends AuthCryptoConfig with AuthMailsServiceProv
 
   val userIdentityDao: UserIdentitiesDao
 
+  lazy val checkPasswordService: CheckPasswordService = CheckPasswordService
+
   lazy val userIdentityService: UserIdentitiesService = new DefaultUserIdentitiesService(userIdentityDao, authUserService)
 
   lazy val passwordHasherService: PasswordHasherService = BCryptPasswordHasherService

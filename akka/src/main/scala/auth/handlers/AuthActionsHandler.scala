@@ -9,13 +9,15 @@ import auth.directives._
 import auth.protocol._
 import auth.providers.email.EmailPasswordServices
 import auth.services.AuthService
+import org.apache.commons.validator.routines.EmailValidator
 import play.api.libs.json.Reads
+import utils.http.directives.ValidationDirectives
 
 import scala.concurrent.ExecutionContext
 import scala.util.Success
 
-class AuthActionsHandler(crypt: CredentialsCommandCrypto, service: AuthService, emailPasswordServices: EmailPasswordServices, override val authParams: AuthParams)(implicit ec: ExecutionContext, mat: Materializer)
-    extends AuthHandlerJson with AuthPermissionsDirectives {
+class AuthActionsHandler(crypt: CredentialsCommandCrypto, service: AuthService, emailPasswordServices: EmailPasswordServices, checkPasswordService: CheckPasswordService, override val authParams: AuthParams)(implicit ec: ExecutionContext, mat: Materializer)
+    extends AuthHandlerJson with AuthPermissionsDirectives with ValidationDirectives {
 
   override val authService = service
 
@@ -63,9 +65,13 @@ class AuthActionsHandler(crypt: CredentialsCommandCrypto, service: AuthService, 
     (pathPrefix("actions") & extractJsonMarshallingContext) { implicit jsonCtx ⇒
       switchRoute ~ post {
         (path("changePassword") & userRequired & entity(as[PasswordChange])) { (status, pc) ⇒
-          onSuccess(passwordChangeService.changePassword(status.userId, pc.oldPass.getOrElse(""), pc.newPass)) { _ ⇒
-            complete(status)
-          }
+          onValid(
+            checkPasswordService.isStrongEnough(pc.newPass) → AuthError.PasswordNotStrongEnough.forField("newPass")
+          ) {
+              onSuccess(passwordChangeService.changePassword(status.userId, pc.oldPass.getOrElse(""), pc.newPass)) { _ ⇒
+                complete(status)
+              }
+            }
         } ~ (path("startPasswordRecovery") & entity(as[StartPasswordRecover])) { spr ⇒
           onSuccess(passwordRecoveryService.startRecovery(spr.email)) {
             complete(emptyResponse)
@@ -73,11 +79,15 @@ class AuthActionsHandler(crypt: CredentialsCommandCrypto, service: AuthService, 
         } ~ (path("checkPasswordRecovery") & authTokenCommand[PasswordRecoverCommand, CheckPasswordRecoverToken]) { _ ⇒
           complete(emptyResponse)
         } ~ (path("recoverPassword") & authTokenExpirableCommand[PasswordRecoverCommand, FinishPasswordRecover]()) { cmd ⇒
-          onSuccess(passwordRecoveryService.finishRecovery(cmd._1.email, cmd._2.newPass).flatMap(authService.getStatus)) { authStatus ⇒
-            respondWithAuth(authStatus) {
-              complete(authStatus)
+          onValid(
+            checkPasswordService.isStrongEnough(cmd._2.newPass) → AuthError.PasswordNotStrongEnough.forField("newPass")
+          ) {
+              onSuccess(passwordRecoveryService.finishRecovery(cmd._1.email, cmd._2.newPass).flatMap(authService.getStatus)) { authStatus ⇒
+                respondWithAuth(authStatus) {
+                  complete(authStatus)
+                }
+              }
             }
-          }
         } ~ (path("verifyEmail") & authTokenCommand[EmailVerifyCommand, EmailVerifyToken]) { cmd ⇒
           onSuccess(emailVerifierService.verify(cmd._1.email)) {
             complete(emptyResponse)
@@ -93,9 +103,14 @@ class AuthActionsHandler(crypt: CredentialsCommandCrypto, service: AuthService, 
             case false ⇒ failWith(AuthError.UserAlreadyRegistered)
           }
         } ~ (path("startEmailChange") & userRequired & entity(as[StartEmailChange])) { (status, cmd) ⇒
-          onSuccess(emailChangeService.start(status.userId, cmd.email)) {
-            complete(emptyResponse)
-          }
+          onValid(
+            cmd.email.trim.nonEmpty → AuthError.NonEmptyRequired.forField("email"),
+            EmailValidator.getInstance().isValid(cmd.email) → AuthError.MalformedEmail.forField("email")
+          ) {
+              onSuccess(emailChangeService.start(status.userId, cmd.email)) {
+                complete(emptyResponse)
+              }
+            }
         } ~ (path("finishEmailChange") & authTokenExpirableCommand[ChangeEmailCommand, FinishEmailChange]()) { cmd ⇒
           onSuccess(emailChangeService.finish(cmd._1.userId, cmd._1.newEmail).flatMap(service.getStatus)) { authStatus ⇒
             respondWithAuth(authStatus) {

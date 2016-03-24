@@ -7,7 +7,7 @@ import auth.protocol.identities.UserIdentitiesFilter
 import reactivemongo.api.commands.WriteResult
 import reactivemongo.api.indexes.{ Index, IndexType }
 import reactivemongo.api.{ DB, QueryOpts }
-import reactivemongo.bson.{ BSONObjectID, Macros }
+import reactivemongo.bson.{ BSONDocumentWriter, BSONObjectID, Macros }
 import reactivemongo.extensions.dao.BsonDao
 import reactivemongo.extensions.dsl.BsonDsl._
 
@@ -51,7 +51,7 @@ class MongoUserIdentitiesDao(db: DB) extends UserIdentitiesDao {
     fullName = r.fullName,
     _id = r._id.fold(BSONObjectID.generate)(BSONObjectID.parse(_).get),
     userId = r.userId,
-    email = r.email,
+    email = r.email.map(_.toLowerCase),
     isEmailVerified = r.isEmailVerified,
     avatarUrl = r.avatarUrl,
 
@@ -63,7 +63,13 @@ class MongoUserIdentitiesDao(db: DB) extends UserIdentitiesDao {
     locale = r.locale
   )
 
-  private implicit val filterWriter = Macros.writer[UserIdentitiesFilter]
+  private implicit val filterWriter = new BSONDocumentWriter[UserIdentitiesFilter] {
+    override def write(t: UserIdentitiesFilter) = {
+      val d = $doc()
+      t.userId.fold(d)(v ⇒ $doc("userId" → v.id)) ++
+        t.email.fold(d)(v ⇒ $doc("email" → v.toLowerCase))
+    }
+  }
 
   override def upsert(u: UserIdentity) = {
     val r = dataToRecord(u)

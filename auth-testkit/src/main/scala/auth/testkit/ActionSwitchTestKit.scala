@@ -13,7 +13,7 @@ trait ActionSwitchTestKit {
         responseAs[AuthStatus].userId
       }
 
-      val switchCr = AuthByCredentials("email", "switch,test@me.com", "123qwe")
+      val switchCr = AuthByCredentials("email", "switch.test@me.com", "123qwe")
       val Some(t) = Put("/auth", switchCr) ~> route ~> check {
         status should be(StatusCodes.Created)
         responseAs[AuthStatus].roles should contain("switch")

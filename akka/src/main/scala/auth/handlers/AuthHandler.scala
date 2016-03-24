@@ -6,13 +6,15 @@ import akka.stream.Materializer
 import auth.AuthServicesComposition
 import auth.directives.AuthDirectives
 import auth.protocol._
+import org.apache.commons.validator.routines.EmailValidator
+import utils.http.directives.ValidationDirectives
 import utils.http.json.JsonMarshallingContext
 
 import scala.concurrent.ExecutionContext
 
-class AuthHandler(val composition: AuthServicesComposition)(implicit ec: ExecutionContext, mat: Materializer) extends AuthHandlerJson with AuthDirectives {
+class AuthHandler(val composition: AuthServicesComposition)(implicit ec: ExecutionContext, mat: Materializer) extends AuthHandlerJson with AuthDirectives with ValidationDirectives {
 
-  import composition.{ authService ⇒ service, emailPasswordServices, userIdentityService }
+  import composition.{ authService ⇒ service, emailPasswordServices, userIdentityService, checkPasswordService }
 
   override val authParams = composition.authParams
 
@@ -46,11 +48,19 @@ class AuthHandler(val composition: AuthServicesComposition)(implicit ec: Executi
           failWith(AuthError.Unauthorized)
 
         } ~ put {
-          entity(as[AuthByToken])(register) ~ entity(as[AuthByCredentials])(register)
+          entity(as[AuthByToken])(register) ~ entity(as[AuthByCredentials]){ cmd ⇒
+            onValid(
+              cmd.email.trim.nonEmpty → AuthError.NonEmptyRequired.forField("email"),
+              EmailValidator.getInstance().isValid(cmd.email) → AuthError.MalformedEmail.forField("email"),
+              checkPasswordService.isStrongEnough(cmd.password) → AuthError.PasswordNotStrongEnough.forField("password")
+            ) {
+                register(cmd)
+              }
+          }
         }
       } ~
         new IdentitiesHandler(userIdentityService, authParams).route ~
-        new AuthActionsHandler(composition.credentialsCommandCrypto, service, emailPasswordServices, authParams).route
+        new AuthActionsHandler(composition.credentialsCommandCrypto, service, emailPasswordServices, checkPasswordService, authParams).route
     }
 
 }

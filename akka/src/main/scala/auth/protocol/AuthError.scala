@@ -34,4 +34,10 @@ object AuthError {
   case class ProviderNotFound(provider: String) extends ApiError("auth.providerNotFound", s"Cannot find provider $provider", 404)
 
   case class JsonParseError(data: JsObject) extends ApiError("auth.parseError", s"Parse error ${data.toString()}", 400)
+
+  object MalformedEmail extends ApiError("auth.malformedEmail", "Please provide real e-mail address", 400)
+
+  object NonEmptyRequired extends ApiError("auth.nonEmptyRequired", "Please fill the field with appropriate data", 400)
+
+  object PasswordNotStrongEnough extends ApiError("auth.passwordNotStrongEnough", "Password is not strong enough", 400)
 }

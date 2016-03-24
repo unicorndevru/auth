@@ -55,6 +55,10 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
     "create a user" in {
       val cr = AuthByCredentials("email", "testCreate@me.com", "123qwe")
 
+      Put("/auth", AuthByCredentials("email", "", "123qwe")) ~> route ~> check {
+        status should be(StatusCodes.BadRequest)
+      }
+
       val Some(t) = Put("/auth", cr) ~> route ~> check {
         status should be(StatusCodes.Created)
         header("Authorization")
