@@ -7,11 +7,11 @@ name := "auth"
 
 val authV = "0.4.0"
 
-val akkaV = "2.4.2"
+val akkaV = "2.4.3"
 
 val reactiveMongoVersion = "0.11.10"
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.11.8"
 
 val gitHeadCommitSha = settingKey[String]("current git commit SHA")
 
@@ -24,7 +24,7 @@ val commonScalariform = scalariformSettings :+ (ScalariformKeys.preferences := S
 
 val commons = Seq(
   organization := "ru.unicorndev",
-  scalaVersion := "2.11.7",
+  scalaVersion := "2.11.8",
   resolvers ++= Seq(
     "Typesafe Repo" at "http://repo.typesafe.com/typesafe/releases/",
     "scalaz-bintray" at "https://dl.bintray.com/scalaz/releases",
@@ -52,7 +52,7 @@ lazy val `auth-akka` = (project in file("akka")).settings(commons: _*).settings(
     "org.mindrot" % "jbcrypt" % "0.3m",
     "commons-validator" % "commons-validator" % "1.5.0",
     "com.typesafe.akka" %% "akka-slf4j" % akkaV,
-    "ru.unicorndev" %% "utils-http" % "0.2.7d892f9"
+    "ru.unicorndev" %% "utils-http" % "0.2.1226a66"
   )
 )
 
