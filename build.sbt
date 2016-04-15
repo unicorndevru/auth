@@ -7,9 +7,9 @@ name := "auth"
 
 val authV = "0.4.0"
 
-val akkaV = "2.4.3"
+val akkaV = "2.4.4"
 
-val reactiveMongoVersion = "0.11.10"
+val reactiveMongoVersion = "0.11.9"
 
 scalaVersion := "2.11.8"
 
@@ -52,7 +52,7 @@ lazy val `auth-akka` = (project in file("akka")).settings(commons: _*).settings(
     "org.mindrot" % "jbcrypt" % "0.3m",
     "commons-validator" % "commons-validator" % "1.5.0",
     "com.typesafe.akka" %% "akka-slf4j" % akkaV,
-    "ru.unicorndev" %% "utils-http" % "0.2.1226a66"
+    "ru.unicorndev" %% "utils-http" % "0.2.7c9fe85"
   )
 )
 
