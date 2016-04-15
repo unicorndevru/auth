@@ -20,7 +20,7 @@ trait MongoSupport {
   val artifactStorePath = new PlatformTempDir()
   val executableNaming = new UUIDTempNaming()
   val command = Command.MongoD
-  val version = Version.Main.V3_0
+  val version = Version.Main.V3_2
   val processOutput = new ProcessOutput(
     Processors.named("[mongod>]", new NullProcessor()),
     Processors.named("[MONGOD>]", new NullProcessor()),
