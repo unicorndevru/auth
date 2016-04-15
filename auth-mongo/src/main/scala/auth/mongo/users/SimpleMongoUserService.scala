@@ -3,17 +3,14 @@ package auth.mongo.users
 import java.util.UUID
 
 import auth.api.{ AuthUsersService, CreateUser }
+import auth.mongo.AuthDao
 import auth.protocol.AuthUserId
 import reactivemongo.api.DB
-import reactivemongo.extensions.dao.BsonDao
-import reactivemongo.extensions.dsl.BsonDsl._
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
-class SimpleMongoUserService(db: DB) extends AuthUsersService {
-
-  object dao extends BsonDao[SimpleUserRecord, String](db, "users")
+class SimpleMongoUserService(db: DB) extends AuthDao[SimpleUserRecord, String](db, "users") with AuthUsersService {
 
   def recordToProtocol(r: SimpleUserRecord) = SimpleUser(
     id = AuthUserId(r._id),
@@ -28,13 +25,13 @@ class SimpleMongoUserService(db: DB) extends AuthUsersService {
   )
 
   override def setEmail(id: AuthUserId, email: String, avatar: Option[String]) = {
-    dao.updateById(id.id, $doc("email" → email, "avatarUrl" → avatar)).filter(_.ok).map(_ ⇒ id)
+    updateById(id.id, $doc("email" → email, "avatarUrl" → avatar)).map(_ ⇒ id)
   }
 
   override def getRoles(id: AuthUserId) = Future.successful(Set.empty)
 
   override def findEmail(id: AuthUserId) =
-    dao.findById(id.id).map(_.flatMap(_.email))
+    findById(id.id).map(_.flatMap(_.email))
 
   override def create(cmd: CreateUser) = {
     val u = SimpleUserRecord(
@@ -46,7 +43,7 @@ class SimpleMongoUserService(db: DB) extends AuthUsersService {
       email = cmd.email,
       locale = cmd.locale
     )
-    dao.insert(u).filter(_.ok).map(_ ⇒ recordToProtocol(u).id)
+    insert(u).map(_ ⇒ recordToProtocol(u).id)
   }
 
 }

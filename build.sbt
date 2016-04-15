@@ -60,8 +60,7 @@ lazy val `auth-mongo` = (project in file("auth-mongo")).settings(commons: _*).se
   name := "auth-mongo",
   version := authV + "." + gitHeadCommitSha.value,
   libraryDependencies ++= Seq(
-    "org.reactivemongo" %% "reactivemongo" % reactiveMongoVersion,
-    "org.reactivemongo" %% "reactivemongo-extensions-bson" % "0.11.7.play24"
+    "org.reactivemongo" %% "reactivemongo" % reactiveMongoVersion
   )
 ).dependsOn(`auth-akka`).aggregate(`auth-akka`)
 
@@ -73,8 +72,7 @@ lazy val `auth-testkit` = (project in file("auth-testkit")).settings(commons: _*
     "org.scalatest" %% "scalatest" % "2.2.5",
     "junit" % "junit" % "4.12",
     "de.flapdoodle.embed" % "de.flapdoodle.embed.mongo" % "1.50.2" % Test,
-    "org.reactivemongo" %% "reactivemongo" % reactiveMongoVersion % Test,
-    "org.reactivemongo" %% "reactivemongo-extensions-bson" % "0.11.7.play24" % Test
+    "org.reactivemongo" %% "reactivemongo" % reactiveMongoVersion % Test
   )
 ).dependsOn(`auth-akka`, `auth-mongo`).aggregate(`auth-akka`, `auth-mongo`)
 

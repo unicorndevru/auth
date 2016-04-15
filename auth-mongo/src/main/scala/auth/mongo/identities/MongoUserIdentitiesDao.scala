@@ -2,28 +2,22 @@ package auth.mongo.identities
 
 import auth.api.UserIdentitiesDao
 import auth.data.identity.{ IdentityId, UserIdentity }
+import auth.mongo.AuthDao
+import auth.mongo.identities.UserIdentityRecord._
 import auth.protocol.AuthError
 import auth.protocol.identities.UserIdentitiesFilter
-import reactivemongo.api.commands.WriteResult
 import reactivemongo.api.indexes.{ Index, IndexType }
 import reactivemongo.api.{ DB, QueryOpts }
-import reactivemongo.bson.{ BSONDocumentWriter, BSONObjectID, Macros }
-import reactivemongo.extensions.dao.BsonDao
-import reactivemongo.extensions.dsl.BsonDsl._
+import reactivemongo.bson.{ BSONDocumentWriter, BSONObjectID }
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 
-class MongoUserIdentitiesDao(db: DB) extends UserIdentitiesDao {
-
-  import UserIdentityRecord._
-
-  object dao extends BsonDao[UserIdentityRecord, BSONObjectID](db, "user.identity") {
-    override def autoIndexes = Seq(
-      Index(Seq("identityId" → IndexType.Descending), unique = true, background = true, dropDups = true),
-      Index(Seq("email" → IndexType.Descending, "identityId.providerId" → IndexType.Descending), background = true)
-    )
-  }
+class MongoUserIdentitiesDao(db: DB) extends AuthDao[UserIdentityRecord, BSONObjectID](db, "user.identity") with UserIdentitiesDao {
+  override def autoIndexes = Seq(
+    Index(Seq("identityId" → IndexType.Descending), unique = true, background = true, dropDups = true),
+    Index(Seq("email" → IndexType.Descending, "identityId.providerId" → IndexType.Descending), background = true)
+  )
 
   private def recordToData(r: UserIdentityRecord): UserIdentity = UserIdentity(
     identityId = r.identityId,
@@ -76,13 +70,13 @@ class MongoUserIdentitiesDao(db: DB) extends UserIdentitiesDao {
     for {
       id ← getCorrectBsonId(r)
       record = r.copy(_id = id)
-      result ← dao.update("identityId" $eq record.identityId, record, upsert = true)
+      result ← collection.update($doc("identityId" → record.identityId), record, upsert = true)
       if result.ok
     } yield recordToData(record)
   }
 
   override def get(id: IdentityId): Future[UserIdentity] =
-    dao.findOne("identityId" $eq id)
+    findOne($doc("identityId" → id))
       .flatMap {
         case Some(userIdentityRecord) ⇒ Future.successful(recordToData(userIdentityRecord))
         case None                     ⇒ Future.failed(AuthError.IdentityNotFound)
@@ -91,7 +85,7 @@ class MongoUserIdentitiesDao(db: DB) extends UserIdentitiesDao {
   override def get(id: String): Future[UserIdentity] =
     (for {
       oId ← parseObjectId(id)
-      user ← dao.findById(oId)
+      user ← findById(oId)
     } yield user)
       .flatMap {
         case Some(userIdentityRecord) ⇒ Future.successful(recordToData(userIdentityRecord))
@@ -99,20 +93,18 @@ class MongoUserIdentitiesDao(db: DB) extends UserIdentitiesDao {
       }
 
   override def delete(id: IdentityId): Future[Boolean] =
-    dao.remove("identityId" $eq id)
+    collection.remove($doc("identityId" → id))
       .map(_.ok)
 
   override def query(filter: UserIdentitiesFilter, offset: Int, limit: Int): Future[List[UserIdentity]] =
-    dao
-      .collection
+    collection
       .find(filter)
       .options(QueryOpts(skipN = offset, batchSizeN = limit))
       .cursor[UserIdentityRecord]()
       .collect[List](limit).map(_.map(recordToData))
 
   override def queryAll(filter: UserIdentitiesFilter) =
-    dao
-      .collection
+    collection
       .find(filter)
       .cursor[UserIdentityRecord]()
       .collect[List]().map(_.map(recordToData))
@@ -126,6 +118,6 @@ class MongoUserIdentitiesDao(db: DB) extends UserIdentitiesDao {
     }
 
   private def getCorrectBsonId(u: UserIdentityRecord): Future[BSONObjectID] =
-    dao.findOne("identityId" $eq u.identityId).map(_.fold(u._id)(_._id))
+    findOne($doc("identityId" → u.identityId)).map(_.fold(u._id)(_._id))
 
 }
