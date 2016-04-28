@@ -3,6 +3,7 @@ package auth.providers
 import auth.api.UserIdentitiesService
 import auth.data.identity.{ OAuth2Info, UserIdentity }
 import auth.protocol.{ AuthByToken, AuthError, AuthUserId, AuthorizeCommand }
+import play.api.libs.json.JsObject
 
 import scala.concurrent.{ ExecutionContext, Future }
 import scala.language.implicitConversions
@@ -11,24 +12,24 @@ abstract class OAuth2Provider(service: UserIdentitiesService)(implicit ec: Execu
 
   def retrieveUserIdentity(info: OAuth2Info): Future[UserIdentity]
 
-  def authorize(authObject: AuthorizeCommand): Future[AuthUserId] = authObject match {
+  def authorize(authObject: AuthorizeCommand, data: Option[JsObject] = None): Future[AuthUserId] = authObject match {
     case tokenObject: AuthByToken ⇒ for {
       identity ← retrieveUserIdentity(OAuth2Info(accessToken = tokenObject.token))
-      userId ← getProfileId(identity)
+      userId ← getProfileId(identity, data)
     } yield userId
     case _ ⇒ Future.failed(AuthError.WrongAuthObject)
   }
 
-  protected def getProfileId(identity: UserIdentity): Future[AuthUserId] =
-    storeIdentity(identity).map(_.userId).flatMap {
+  protected def getProfileId(identity: UserIdentity, data: Option[JsObject] = None): Future[AuthUserId] =
+    storeIdentity(identity, data).map(_.userId).flatMap {
       case Some(userId) ⇒ Future.successful(userId)
       case _            ⇒ Future.failed(AuthError.UserIdNotFound)
     }
 
-  private def storeIdentity(newIdentity: UserIdentity): Future[UserIdentity] =
+  private def storeIdentity(newIdentity: UserIdentity, data: Option[JsObject] = None): Future[UserIdentity] =
     service.find(newIdentity.identityId).flatMap {
       case Some(oldIdentity) ⇒ updateIdentity(oldIdentity, newIdentity)
-      case None              ⇒ saveNewIdentity(newIdentity)
+      case None              ⇒ saveNewIdentity(newIdentity, data)
     }
 
   private def updateIdentity(
@@ -49,6 +50,6 @@ abstract class OAuth2Provider(service: UserIdentitiesService)(implicit ec: Execu
     ))
   }
 
-  private def saveNewIdentity(user: UserIdentity): Future[UserIdentity] =
-    service.saveNewIdentityAndCreateNewUser(user)
+  private def saveNewIdentity(user: UserIdentity, data: Option[JsObject] = None): Future[UserIdentity] =
+    service.saveNewIdentityAndCreateNewUser(user, data)
 }

@@ -1,6 +1,7 @@
 package auth.api
 
 import auth.protocol.AuthUserId
+import play.api.libs.json.JsObject
 
 import scala.concurrent.Future
 
@@ -22,6 +23,7 @@ case class CreateUser(
   fullName:  Option[String],
   avatarUrl: Option[String],
   locale:    Option[String],
+  data:      Option[JsObject],
 
   email: Option[String]
 )

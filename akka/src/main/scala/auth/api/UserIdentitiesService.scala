@@ -3,6 +3,7 @@ package auth.api
 import auth.data.identity.{ IdentityId, UserIdentity }
 import auth.protocol.identities.UserIdentitiesFilter
 import auth.protocol.{ AuthError, AuthUserId }
+import play.api.libs.json.JsObject
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -13,7 +14,7 @@ trait UserIdentitiesService {
 
   def get(id: String): Future[UserIdentity]
 
-  def createUser(identity: UserIdentity): Future[AuthUserId]
+  def createUser(identity: UserIdentity, data: Option[JsObject]): Future[AuthUserId]
 
   def remove(identityId: IdentityId): Future[Boolean]
 
@@ -36,7 +37,7 @@ trait UserIdentitiesService {
    * @param identity identity to create
    * @return saved identity with profileId
    */
-  def saveNewIdentityAndCreateNewUser(identity: UserIdentity): Future[UserIdentity]
+  def saveNewIdentityAndCreateNewUser(identity: UserIdentity, data: Option[JsObject] = None): Future[UserIdentity]
 
   /**
    * Updates existed identity. Doesn't create new user profile.
@@ -55,12 +56,12 @@ class DefaultUserIdentitiesService(dao: UserIdentitiesDao, service: AuthUsersSer
 
   override def get(id: String): Future[UserIdentity] = dao.get(id)
 
-  override def saveNewIdentityAndCreateNewUser(identity: UserIdentity): Future[UserIdentity] =
+  override def saveNewIdentityAndCreateNewUser(identity: UserIdentity, data: Option[JsObject] = None): Future[UserIdentity] =
     find(identity.identityId)
       .flatMap {
         case Some(_) ⇒ Future.failed(AuthError.DuplicateIdentities)
         case None ⇒
-          createUser(identity)
+          createUser(identity, data)
             .flatMap { uid ⇒
               dao.upsert(identity.copy(userId = Some(uid)))
             }
@@ -76,12 +77,13 @@ class DefaultUserIdentitiesService(dao: UserIdentitiesDao, service: AuthUsersSer
     _ = events.identityChanged(curr, prev)
   } yield curr
 
-  override def createUser(user: UserIdentity): Future[AuthUserId] = service.create(CreateUser(
+  override def createUser(user: UserIdentity, data: Option[JsObject]): Future[AuthUserId] = service.create(CreateUser(
     firstName = user.firstName,
     lastName = user.lastName,
     fullName = user.fullName,
     avatarUrl = user.avatarUrl,
     locale = user.locale,
+    data = data,
     email = user.email
   ))
 

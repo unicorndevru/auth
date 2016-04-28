@@ -5,6 +5,7 @@ import auth.data.identity.{ IdentityId, UserIdentity }
 import auth.protocol._
 import auth.providers.Provider
 import auth.providers.email.{ EmailPasswordServices, PasswordHasherService }
+import play.api.libs.json.JsObject
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -43,12 +44,12 @@ class AuthService(
     case _       ⇒ Future.failed(AuthError.ProviderNotFound(id))
   }
 
-  def register(authObject: AuthorizeCommand): Future[AuthStatus] =
+  def register(authObject: AuthorizeCommand, data: Option[JsObject] = None): Future[AuthStatus] =
     for {
       id ← authCommandToIdentityId(authObject)
       registered ← isRegistered(id)
       _ ← registeredPredicate(registered)
-      userIdentity ← createIdentity(authObject)
+      userIdentity ← createIdentity(authObject, data)
       _ = emailVerifierService.sendVerifyingEmail(userIdentity.userId.get)(userIdentity.email.get)
       Some(uid) = userIdentity.userId
       s ← getStatus(uid)
@@ -61,7 +62,7 @@ class AuthService(
     }
   }
 
-  def createIdentity(authObject: AuthorizeCommand): Future[UserIdentity] = authObject match {
+  def createIdentity(authObject: AuthorizeCommand, data: Option[JsObject]): Future[UserIdentity] = authObject match {
     case credentialsObject: AuthByCredentials ⇒
       val passwordInfo = pwdService.createPasswordInfo(credentialsObject.password)
       val defaultName = credentialsObject.email.split("@").headOption
@@ -78,7 +79,7 @@ class AuthService(
           authMethod = passwordInfo.method,
           passwordInfo = Some(passwordInfo)
         )
-      userIdentityService.saveNewIdentityAndCreateNewUser(userIdentity)
+      userIdentityService.saveNewIdentityAndCreateNewUser(userIdentity, data)
 
     case _ ⇒ Future.failed(AuthError.WrongAuthObject)
   }
