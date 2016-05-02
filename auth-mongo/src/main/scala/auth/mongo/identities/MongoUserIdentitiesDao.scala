@@ -65,18 +65,26 @@ class MongoUserIdentitiesDao(db: DB) extends AuthDao[UserIdentityRecord, BSONObj
     }
   }
 
+  private val identityIdSelector = new BSONDocumentWriter[IdentityId] {
+    override def write(t: IdentityId) =
+      $doc(
+        "identityId.userId" → $doc("$regex" → s"^${t.userId}$$", "$options" → "i"),
+        "identityId.providerId" → $doc("$regex" → s"^${t.providerId}$$", "$options" → "i")
+      )
+  }
+
   override def upsert(u: UserIdentity) = {
     val r = dataToRecord(u)
     for {
       id ← getCorrectBsonId(r)
       record = r.copy(_id = id)
-      result ← collection.update($doc("identityId" → record.identityId), record, upsert = true)
+      result ← collection.update(identityIdSelector.write(record.identityId), record, upsert = true)
       if result.ok
     } yield recordToData(record)
   }
 
   override def get(id: IdentityId): Future[UserIdentity] =
-    findOne($doc("identityId" → id))
+    findOne(identityIdSelector.write(id))
       .flatMap {
         case Some(userIdentityRecord) ⇒ Future.successful(recordToData(userIdentityRecord))
         case None                     ⇒ Future.failed(AuthError.IdentityNotFound)
@@ -93,7 +101,7 @@ class MongoUserIdentitiesDao(db: DB) extends AuthDao[UserIdentityRecord, BSONObj
       }
 
   override def delete(id: IdentityId): Future[Boolean] =
-    collection.remove($doc("identityId" → id))
+    collection.remove(identityIdSelector.write(id))
       .map(_.ok)
 
   override def query(filter: UserIdentitiesFilter, offset: Int, limit: Int): Future[List[UserIdentity]] =
@@ -118,6 +126,6 @@ class MongoUserIdentitiesDao(db: DB) extends AuthDao[UserIdentityRecord, BSONObj
     }
 
   private def getCorrectBsonId(u: UserIdentityRecord): Future[BSONObjectID] =
-    findOne($doc("identityId" → u.identityId)).map(_.fold(u._id)(_._id))
+    findOne(identityIdSelector.write(u.identityId)).map(_.fold(u._id)(_._id))
 
 }

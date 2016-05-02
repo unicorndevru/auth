@@ -83,6 +83,12 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
         header("Authorization") should be('defined)
       }
 
+      Post("/auth", cr.copy(email = cr.email.toUpperCase)) ~> route ~> check {
+        status should be(StatusCodes.OK)
+        responseAs[AuthStatus] should be(st)
+        header("Authorization") should be('defined)
+      }
+
       Post("/auth/actions/switch", SwitchUserCommand(AuthUserId("other"))).withHeaders(t) ~> route ~> check {
         status should be(StatusCodes.Forbidden)
       }
