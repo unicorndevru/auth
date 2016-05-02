@@ -15,7 +15,7 @@ class TestUserIdentitiesDao extends UserIdentitiesDao {
 
   var identities = TrieMap[String, UserIdentity]()
 
-  override def get(id: IdentityId) = Future(identities.values.find(_.identityId == id).getOrElse(throw AuthError.IdentityNotFound))
+  override def get(id: IdentityId) = Future(identities.values.find(v ⇒ (v.identityId.userId equalsIgnoreCase id.userId) && (v.identityId.providerId equalsIgnoreCase id.providerId)).getOrElse(throw AuthError.IdentityNotFound))
 
   override def get(id: String) = Future.successful(identities(id))
 
