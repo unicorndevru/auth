@@ -256,6 +256,8 @@ trait AuthHandlerTestKit extends WordSpec with ScalatestRouteTest with Matchers 
       }
 
       st.userId should equal(st2.userId)
+
+      composition.authUserService.findEmail(st.userId).futureValue.get.toLowerCase should be("newemail@me.com")
     }
   }
 }
