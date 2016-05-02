@@ -25,7 +25,7 @@ class SimpleMongoUserService(db: DB) extends AuthDao[SimpleUserRecord, String](d
   )
 
   override def setEmail(id: AuthUserId, email: String, avatar: Option[String]) = {
-    updateById(id.id, $doc("email" → email, "avatarUrl" → avatar)).map(_ ⇒ id)
+    updateById(id.id, $doc("$set" → $doc("email" → email, "avatarUrl" → avatar))).map(_ ⇒ id)
   }
 
   override def getRoles(id: AuthUserId) = Future.successful(Set.empty)
