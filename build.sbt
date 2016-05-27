@@ -7,7 +7,7 @@ name := "auth"
 
 val authV = "0.4.0"
 
-val akkaV = "2.4.4"
+val akkaV = "2.4.6"
 
 val reactiveMongoVersion = "0.11.9"
 
@@ -48,11 +48,11 @@ lazy val `auth-akka` = (project in file("akka")).settings(commons: _*).settings(
   name := "auth-akka",
   version := authV + "." + gitHeadCommitSha.value,
   libraryDependencies ++= Seq(
-    "com.pauldijou" %% "jwt-play-json" % "0.6.0",
+    "com.pauldijou" %% "jwt-play-json" % "0.7.1",
     "org.mindrot" % "jbcrypt" % "0.3m",
     "commons-validator" % "commons-validator" % "1.5.0",
     "com.typesafe.akka" %% "akka-slf4j" % akkaV,
-    "ru.unicorndev" %% "utils-http" % "0.2.7c9fe85"
+    "ru.unicorndev" %% "utils-http" % "0.2.21deacd"
   )
 )
 
