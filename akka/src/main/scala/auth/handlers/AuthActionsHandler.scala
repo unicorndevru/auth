@@ -26,43 +26,41 @@ class AuthActionsHandler(crypt: CredentialsCommandCrypto, service: AuthService, 
   import emailPasswordServices._
 
   val switchRoute =
-    extractJsonMarshallingContext { implicit jsonCtx ⇒
-      (path("switch") & userRequired) { status ⇒
-        (post & entity(as[SwitchUserCommand])) { cmd ⇒
-          cmd.userId match {
-            case id if id == status.userId ⇒
-              respondWithAuth(status)(complete(status))
+    (path("switch") & userRequired) { status ⇒
+      (post & entity(as[SwitchUserCommand])) { cmd ⇒
+        cmd.userId match {
+          case id if id == status.userId ⇒
+            respondWithAuth(status)(complete(status))
 
-            case id if status.originUserId.contains(id) ⇒
-              // always allow
+          case id if status.originUserId.contains(id) ⇒
+            // always allow
+            onSuccess(service.getStatus(id)) { s ⇒
+              respondWithAuth(s)(complete(s))
+            }
+
+          case id ⇒
+            permissionsRequired(status, "switch") { _ ⇒
               onSuccess(service.getStatus(id)) { s ⇒
-                respondWithAuth(s)(complete(s))
+                val st = s.copy(originUserId = status.originUserId orElse Some(status.userId))
+                respondWithAuth(st)(complete(st))
               }
+            }
+        }
+      } ~ delete {
+        status.originUserId match {
+          case Some(o) ⇒
+            onSuccess(service.getStatus(o)) { s ⇒
+              respondWithAuth(s)(complete(s))
+            }
 
-            case id ⇒
-              permissionsRequired(status, "switch") { _ ⇒
-                onSuccess(service.getStatus(id)) { s ⇒
-                  val st = s.copy(originUserId = status.originUserId orElse Some(status.userId))
-                  respondWithAuth(st)(complete(st))
-                }
-              }
-          }
-        } ~ delete {
-          status.originUserId match {
-            case Some(o) ⇒
-              onSuccess(service.getStatus(o)) { s ⇒
-                respondWithAuth(s)(complete(s))
-              }
-
-            case None ⇒
-              complete(status)
-          }
+          case None ⇒
+            complete(status)
         }
       }
     }
 
   val route =
-    (pathPrefix("actions") & extractJsonMarshallingContext) { implicit jsonCtx ⇒
+    pathPrefix("actions") {
       switchRoute ~ post {
         (path("changePassword") & userRequired & entity(as[PasswordChange])) { (status, pc) ⇒
           onValid(

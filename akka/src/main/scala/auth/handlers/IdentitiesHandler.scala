@@ -21,20 +21,19 @@ class IdentitiesHandler(service: UserIdentitiesService, override val authParams:
     )
 
   val route =
-    extractJsonMarshallingContext { implicit jsonCtx ⇒
-      (pathPrefix("identities") & userRequired) { status ⇒
-        (get & pathEndOrSingleSlash) {
-          val f = UserIdentitiesFilter(userId = Some(status.userId))
-          complete(service.queryAll(f).map(is ⇒ AuthIdentitiesList(f, is.map(identityToProtocol))))
-        } ~ (get & path(Segment)) { id ⇒
-          complete(service.get(id).flatMap { ui ⇒
-            if (ui.userId.contains(status.userId)) {
-              Future.successful(identityToProtocol(ui))
-            } else {
-              Future.failed(AuthError.IdentityNotFound)
-            }
-          })
-        }
+    (pathPrefix("identities") & userRequired) { status ⇒
+      (get & pathEndOrSingleSlash) {
+        val f = UserIdentitiesFilter(userId = Some(status.userId))
+        complete(service.queryAll(f).map(is ⇒ AuthIdentitiesList(f, is.map(identityToProtocol))))
+      } ~ (get & path(Segment)) { id ⇒
+        complete(service.get(id).flatMap { ui ⇒
+          if (ui.userId.contains(status.userId)) {
+            Future.successful(identityToProtocol(ui))
+          } else {
+            Future.failed(AuthError.IdentityNotFound)
+          }
+        })
       }
     }
+
 }

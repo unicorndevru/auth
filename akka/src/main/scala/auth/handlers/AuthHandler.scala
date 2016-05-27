@@ -9,7 +9,6 @@ import auth.protocol._
 import org.apache.commons.validator.routines.EmailValidator
 import play.api.libs.json.JsObject
 import utils.http.directives.ValidationDirectives
-import utils.http.json.JsonMarshallingContext
 
 import scala.concurrent.ExecutionContext
 
@@ -19,7 +18,7 @@ class AuthHandler(val composition: AuthServicesComposition)(implicit ec: Executi
 
   override val authParams = composition.authParams
 
-  def authorize(cmd: AuthorizeCommand)(implicit jsonCtx: JsonMarshallingContext) =
+  def authorize(cmd: AuthorizeCommand) =
     onSuccess(service.authorize(cmd)) {
       case Some(s) ⇒
         respondWithAuth(s) {
@@ -29,7 +28,7 @@ class AuthHandler(val composition: AuthServicesComposition)(implicit ec: Executi
         failWith(AuthError.InvalidCredentials)
     }
 
-  def register(cmd: AuthorizeCommand, data: Option[JsObject] = None)(implicit jsonCtx: JsonMarshallingContext) =
+  def register(cmd: AuthorizeCommand, data: Option[JsObject] = None) =
     onSuccess(service.register(cmd, data)) { s ⇒
       respondWithAuth(s) {
         complete(StatusCodes.Created → s)
@@ -37,7 +36,7 @@ class AuthHandler(val composition: AuthServicesComposition)(implicit ec: Executi
     }
 
   val route =
-    (pathPrefix("auth") & extractJsonMarshallingContext) { implicit jsonCtx ⇒
+    pathPrefix("auth") {
       pathEndOrSingleSlash {
         (get & userRequired) { status ⇒
           complete(status)
