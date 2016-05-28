@@ -34,6 +34,20 @@ class PasswordChangeService(userIdentityService: UserIdentitiesService, password
   }
 
   /**
+   * Force password change without checks
+   * @param userId user's id
+   * @param newPass new password
+   * @return updated identities
+   */
+  def setPassword(userId: AuthUserId, newPass: String): Future[List[UserIdentity]] = {
+    userIdentityService
+      .queryAll(UserIdentitiesFilter(userId = Option(userId)))
+      .flatMap { list ⇒
+        Future.traverse(list.filter(_.passwordInfo.isDefined))(setNewPassword(_, newPass))
+      }
+  }
+
+  /**
    * Recover password without checking old pass. If identity has password info, it will be overriden with new password info.
    *
    * @param identity identity where recover is happening
