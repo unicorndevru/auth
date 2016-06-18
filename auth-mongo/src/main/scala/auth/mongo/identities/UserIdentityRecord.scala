@@ -43,16 +43,6 @@ private[mongo] object UserIdentityRecord {
   implicit val passwordInfoFormat = Macros.handler[PasswordInfo]
   implicit val identityIdFormat = Macros.handler[IdentityId]
 
-  implicit val format = {
-    // TODO: remove legacy format conversion
-    val h = Macros.handler[UserIdentityRecord]
-    new BSONDocumentReader[UserIdentityRecord] with BSONDocumentWriter[UserIdentityRecord] {
-      override def read(bson: BSONDocument) = {
-        h.read(bson.getAs[BSONString]("profileId").fold(bson)(pid ⇒ bson ++ ("userId" → pid)))
-      }
-
-      override def write(t: UserIdentityRecord) = h.write(t)
-    }
-  }
+  implicit val format = Macros.handler[UserIdentityRecord]
 
 }
