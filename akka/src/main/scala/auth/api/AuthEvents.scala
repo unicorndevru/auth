@@ -1,10 +1,10 @@
 package auth.api
 
-import auth.data.identity.UserIdentity
+import auth.protocol.AuthStatus
 
 trait AuthEvents {
-  def identityCreated(identity: UserIdentity): UserIdentity = identity
-  def identityChanged(updated: UserIdentity, old: UserIdentity): UserIdentity = updated
+  def userRegistered(status: AuthStatus)(implicit ctx: AuthRequestContext): Unit = ()
+  def userAuthenticated(status: AuthStatus)(implicit ctx: AuthRequestContext): Unit = ()
 }
 
 object AuthEvents extends AuthEvents

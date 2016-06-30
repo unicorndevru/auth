@@ -48,7 +48,7 @@ trait UserIdentitiesService {
   def updateExistingIdentity(identity: UserIdentity): Future[UserIdentity]
 }
 
-class DefaultUserIdentitiesService(dao: UserIdentitiesDao, service: AuthUsersService, events: AuthEvents = AuthEvents)(implicit ec: ExecutionContext = ExecutionContext.global) extends UserIdentitiesService {
+class DefaultUserIdentitiesService(dao: UserIdentitiesDao, service: AuthUsersService)(implicit ec: ExecutionContext = ExecutionContext.global) extends UserIdentitiesService {
 
   override def find(id: IdentityId): Future[Option[UserIdentity]] = get(id).map(Some(_)).recover({ case e ⇒ None })
 
@@ -66,15 +66,13 @@ class DefaultUserIdentitiesService(dao: UserIdentitiesDao, service: AuthUsersSer
               dao.upsert(identity.copy(userId = Some(uid)))
             }
       }
-      .map(events.identityCreated)
 
   override def saveNewIdentity(identity: UserIdentity): Future[UserIdentity] =
-    dao.upsert(identity).map(events.identityCreated)
+    dao.upsert(identity)
 
   override def updateExistingIdentity(identity: UserIdentity): Future[UserIdentity] = for {
     prev ← get(identity.identityId)
     curr ← dao.upsert(identity)
-    _ = events.identityChanged(curr, prev)
   } yield curr
 
   override def createUser(user: UserIdentity, data: Option[JsObject]): Future[AuthUserId] = service.create(CreateUser(

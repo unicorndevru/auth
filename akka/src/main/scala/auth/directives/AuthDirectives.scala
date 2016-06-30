@@ -2,9 +2,11 @@ package auth.directives
 
 import java.time.Instant
 
-import akka.http.scaladsl.model.headers.CustomHeader
+import akka.http.scaladsl.model.RemoteAddress
+import akka.http.scaladsl.model.headers.{ CustomHeader, `User-Agent` }
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.{ AuthorizationFailedRejection, Directive0, Directive1 }
+import auth.api.AuthRequestContext
 import auth.protocol.{ AuthError, AuthStatus, AuthUserId }
 import auth.services.AuthService
 import pdi.jwt.algorithms.JwtHmacAlgorithm
@@ -47,41 +49,56 @@ trait AuthDirectives {
 
   import authParams._
 
-  val userAware: Directive1[Option[AuthStatus]] =
-    optionalHeaderValueByName("Authorization")
-      .map(_.filter(_.startsWith("Bearer ")).map(_.stripPrefix("Bearer ")))
-      .map {
+  def extractAuthRequestContext: Directive1[AuthRequestContext] =
+    ((extractClientIP.map(addr ⇒ Some(addr)) | provide(Option.empty[RemoteAddress])) & optionalHeaderValueByType[`User-Agent`]() & userAware).tflatMap{
+      case (addr, ua, s) ⇒ provide(new AuthRequestContext {
+        override def remoteAddress = addr
 
-        case Some(token) ⇒
+        override def userAgent = ua.map(_.value())
 
-          JwtJson.decode(token, secretKey, Seq(JwtAlgorithm.HS256))
-            .filter(claim ⇒
-              issuer.fold(claim.isValid)(iss ⇒
-                audience.fold(claim.isValid(iss))(aud ⇒ claim.isValid(iss, aud)))
-                && claim.subject.isDefined)
-            .toOption
-            .map { claim ⇒
-              val s = AuthStatus(
-                userId = AuthUserId(claim.subject.get),
-                roles = Set.empty,
-                originUserId = None
-              )
+        override def status = s
+      })
+    }
 
-              Try(Json.parse(claim.content).validate[AuthClaimData]).toOption.flatMap(_.asOpt).fold(s)(
-                d ⇒ s.copy(
-                  roles = d.r,
-                  originUserId = d.o.map(AuthUserId)
+  def userAware(implicit reqCtx: AuthRequestContext = null): Directive1[Option[AuthStatus]] = Option(reqCtx) match {
+    case Some(ctx) ⇒
+      provide(ctx.status)
+    case None ⇒
+      optionalHeaderValueByName("Authorization")
+        .map(_.filter(_.startsWith("Bearer ")).map(_.stripPrefix("Bearer ")))
+        .map {
+
+          case Some(token) ⇒
+
+            JwtJson.decode(token, secretKey, Seq(JwtAlgorithm.HS256))
+              .filter(claim ⇒
+                issuer.fold(claim.isValid)(iss ⇒
+                  audience.fold(claim.isValid(iss))(aud ⇒ claim.isValid(iss, aud)))
+                  && claim.subject.isDefined)
+              .toOption
+              .map { claim ⇒
+                val s = AuthStatus(
+                  userId = AuthUserId(claim.subject.get),
+                  roles = Set.empty,
+                  originUserId = None
                 )
-              )
-            }
 
-        case _ ⇒
-          None
-      }
+                Try(Json.parse(claim.content).validate[AuthClaimData]).toOption.flatMap(_.asOpt).fold(s)(
+                  d ⇒ s.copy(
+                    roles = d.r,
+                    originUserId = d.o.map(AuthUserId)
+                  )
+                )
+              }
+
+          case _ ⇒
+            None
+        }
+  }
 
   val userStringIdAware: Directive1[Option[String]] = userAware.map(_.map(_.userId.id))
 
-  val userRequired: Directive1[AuthStatus] = userAware.flatMap {
+  def userRequired(implicit reqCtx: AuthRequestContext = null): Directive1[AuthStatus] = userAware.flatMap {
     case Some(a) ⇒ provide(a)
     case None    ⇒ failWith(AuthError.Unauthorized)
   }
@@ -95,11 +112,11 @@ trait AuthDirectives {
       reject(AuthorizationFailedRejection)
     }
 
-  def rolesRequired(rs: String*): Directive1[AuthStatus] = userRequired.flatMap { s ⇒
+  def rolesRequired(rs: String*)(implicit reqCtx: AuthRequestContext = null): Directive1[AuthStatus] = userRequired.flatMap { s ⇒
     rolesRequired(s, rs: _*)
   }
 
-  def respondWithAuth: Directive0 = userAware.flatMap {
+  def respondWithAuth(implicit reqCtx: AuthRequestContext = null): Directive0 = userAware.flatMap {
     case Some(a) ⇒ respondWithAuth(a)
     case None    ⇒ pass
   }
@@ -135,7 +152,7 @@ trait AuthPermissionsDirectives extends AuthDirectives {
       }
     }
 
-  def permissionsRequired(ps: String*): Directive1[AuthStatus] = userRequired.flatMap { s ⇒
+  def permissionsRequired(ps: String*)(implicit reqCtx: AuthRequestContext = null): Directive1[AuthStatus] = userRequired.flatMap { s ⇒
     permissionsRequired(s, ps: _*)
   }
 }
