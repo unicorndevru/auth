@@ -1,7 +1,8 @@
 package auth.mongo.users
 
+import java.time.Instant
+
 import auth.protocol.AuthUserId
-import org.joda.time.DateTime
 
 case class SimpleUser(
   id:          AuthUserId,
@@ -11,6 +12,6 @@ case class SimpleUser(
   email:       Option[String] = None,
   avatarUrl:   Option[String] = None,
   locale:      Option[String] = None,
-  dateCreated: DateTime,
-  lastUpdated: DateTime
+  dateCreated: Instant,
+  lastUpdated: Instant
 )

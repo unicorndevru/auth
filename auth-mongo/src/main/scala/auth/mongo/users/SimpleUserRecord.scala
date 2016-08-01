@@ -1,7 +1,8 @@
 package auth.mongo.users
 
-import org.joda.time.DateTime
-import reactivemongo.bson.{ BSONWriter, BSONDateTime, BSONReader, Macros }
+import java.time.Instant
+
+import reactivemongo.bson.{ BSONDateTime, BSONReader, BSONWriter, Macros }
 
 private[mongo] case class SimpleUserRecord(
   _id:         String,
@@ -11,15 +12,15 @@ private[mongo] case class SimpleUserRecord(
   email:       Option[String] = None,
   avatarUrl:   Option[String] = None,
   locale:      Option[String] = None,
-  dateCreated: DateTime       = DateTime.now(),
-  lastUpdated: DateTime       = DateTime.now()
+  dateCreated: Instant        = Instant.now(),
+  lastUpdated: Instant        = Instant.now()
 )
 
 object SimpleUserRecord {
-  implicit val dateTimeHandler = new BSONReader[BSONDateTime, DateTime] with BSONWriter[DateTime, BSONDateTime] {
-    override def read(bson: BSONDateTime): DateTime = new DateTime(bson.value)
+  implicit val dateTimeHandler = new BSONReader[BSONDateTime, Instant] with BSONWriter[Instant, BSONDateTime] {
+    override def read(bson: BSONDateTime): Instant = Instant.ofEpochMilli(bson.value)
 
-    override def write(t: DateTime): BSONDateTime = BSONDateTime(t.getMillis)
+    override def write(t: Instant): BSONDateTime = BSONDateTime(t.toEpochMilli)
   }
 
   implicit val handler = Macros.handler[SimpleUserRecord]

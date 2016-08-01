@@ -21,7 +21,7 @@ case class AuthParams(
   secretKey: String,
   expireIn:  Int              = 86400,
   issuer:    Option[String]   = Some("auth"),
-  audience:  Option[String]   = None,
+  audience:  Set[String]      = Set.empty,
   algo:      JwtHmacAlgorithm = JwtAlgorithm.HS256
 )
 
@@ -73,8 +73,8 @@ trait AuthDirectives {
             JwtJson.decode(token, secretKey, Seq(JwtAlgorithm.HS256))
               .filter(claim ⇒
                 issuer.fold(claim.isValid)(iss ⇒
-                  audience.fold(claim.isValid(iss))(aud ⇒ claim.isValid(iss, aud)))
-                  && claim.subject.isDefined)
+                  ((audience.nonEmpty && audience.exists(claim.isValid(iss, _))) || claim.isValid(iss))
+                    && claim.subject.isDefined))
               .toOption
               .map { claim ⇒
                 val s = AuthStatus(
@@ -128,7 +128,7 @@ trait AuthDirectives {
       issuedAt = Some(Instant.now.getEpochSecond),
       subject = Some(s.userId.id),
       issuer = issuer,
-      audience = audience,
+      audience = Option(audience).filterNot(_.isEmpty),
       content = Json.toJson(AuthClaimData(r = s.roles, o = s.originUserId.map(_.id))).toString()
     )
 

@@ -18,7 +18,7 @@ abstract class WithAuth(status: AuthStatus, params: AuthParams) {
     issuedAt = Some(Instant.now.getEpochSecond),
     subject = Some(status.userId.id),
     issuer = issuer,
-    audience = audience,
+    audience = Option(audience).filterNot(_.isEmpty),
     content = Json.toJson(AuthClaimData(r = status.roles, o = status.originUserId.map(_.id))).toString
   )
 
