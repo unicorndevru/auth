@@ -3,14 +3,12 @@ package auth.mongo
 import auth.api.{ AuthCryptoConfig, JwtCommandCrypto }
 import auth.directives.AuthParams
 import auth.testkit.{ AuthHandlerTestKit, InMemoryAuthMailsProvider }
-import org.junit.runner.RunWith
 import org.scalatest._
 import reactivemongo.api.{ DefaultDB, MongoConnection, MongoDriver }
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
-@RunWith(classOf[junit.JUnitRunner])
 class AuthMongoHandlerSpec extends AuthHandlerTestKit with BeforeAndAfterAll with MongoSupport {
 
   var db: DefaultDB = null

@@ -69,8 +69,7 @@ lazy val `auth-testkit` = (project in file("auth-testkit")).settings(commons: _*
   version := authV + "." + gitHeadCommitSha.value,
   libraryDependencies ++= Seq(
     "com.typesafe.akka" %% "akka-http-testkit" % akkaV,
-    "org.scalatest" %% "scalatest" % "2.2.5",
-    "junit" % "junit" % "4.12",
+    "org.scalatest" %% "scalatest" % "3.0.0",
     "de.flapdoodle.embed" % "de.flapdoodle.embed.mongo" % "1.50.5" % Test,
     "org.reactivemongo" %% "reactivemongo" % reactiveMongoVersion % Test
   )
