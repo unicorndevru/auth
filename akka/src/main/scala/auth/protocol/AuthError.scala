@@ -40,4 +40,10 @@ object AuthError {
   object NonEmptyRequired extends ApiError("auth.nonEmptyRequired", "Please fill the field with appropriate data", 400)
 
   object PasswordNotStrongEnough extends ApiError("auth.passwordNotStrongEnough", "Password is not strong enough", 400)
+
+  case class FacebookProfileRetrievingError(errCode: Int, errType: String, message: String) extends ApiError("auth.facebookError", s"Facebook error $errCode ($errType): $message", 500)
+
+  case class VkProfileRetrievingError(errCode: Int, message: String) extends ApiError("auth.vkError", s"Vk error $errCode: $message")
+
+  case class GoogleProfileRetrievingError(errCode: Int, message: String) extends ApiError("auth.googleError", s"Google error $errCode: $message")
 }

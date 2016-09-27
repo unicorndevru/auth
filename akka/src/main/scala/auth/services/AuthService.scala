@@ -34,7 +34,7 @@ class AuthService(
   def authorize(authObject: AuthorizeCommand): Future[Option[AuthStatus]] = {
     for {
       provider ← getProvider(authObject.provider)
-      pid ← provider.authorize(authObject)
+      pid ← provider.authorize(authObject, data = None)
       s ← getStatus(pid)
     } yield Option(s)
   }

@@ -4,6 +4,7 @@ import auth.api.UserIdentitiesService
 import auth.data.identity.{ IdentityId, UserIdentity }
 import auth.protocol._
 import auth.providers.Provider
+import play.api.libs.json.JsObject
 
 import scala.concurrent.{ ExecutionContext, Future }
 
@@ -11,7 +12,7 @@ class EmailCredentialsProvider(service: UserIdentitiesService, pwdService: Passw
 
   override val id = "email"
 
-  override def authorize(authObject: AuthorizeCommand): Future[AuthUserId] = authObject match {
+  override def authorize(authObject: AuthorizeCommand, data: Option[JsObject]): Future[AuthUserId] = authObject match {
     case credentials: AuthByCredentials ⇒
       for {
         identity ← service.get(IdentityId(userId = credentials.email, providerId = credentials.provider))

@@ -1,5 +1,7 @@
 package auth.data.identity
 
+import java.time.LocalDate
+
 import auth.protocol.AuthUserId
 
 case class UserIdentity(
@@ -22,5 +24,7 @@ case class UserIdentity(
   oAuth2Info:   Option[OAuth2Info]   = None,
   passwordInfo: Option[PasswordInfo] = None,
 
-  locale: Option[String] = None
+  locale: Option[String] = None,
+
+  birthday: Option[LocalDate] = None
 )

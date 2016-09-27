@@ -21,7 +21,9 @@ trait AuthServicesComposition extends AuthCryptoConfig with AuthMailsServiceProv
 
   lazy val emailPasswordServices = new EmailPasswordServices(authUserService, userIdentityService, credentialsCommandCrypto, passwordHasherService, authMailsService, gravatarLinkService)
 
-  lazy val credentialsProviders: Set[Provider] = Set(new EmailCredentialsProvider(userIdentityService))
+  lazy val credentialsProviders: Set[Provider] = Set(
+    new EmailCredentialsProvider(userIdentityService)
+  )
 
   lazy val authService = new AuthService(authUserService, emailPasswordServices, userIdentityService, credentialsProviders, passwordHasherService, gravatarLinkService)
 

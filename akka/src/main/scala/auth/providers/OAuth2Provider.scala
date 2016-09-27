@@ -12,7 +12,7 @@ abstract class OAuth2Provider(service: UserIdentitiesService)(implicit ec: Execu
 
   def retrieveUserIdentity(info: OAuth2Info): Future[UserIdentity]
 
-  def authorize(authObject: AuthorizeCommand, data: Option[JsObject] = None): Future[AuthUserId] = authObject match {
+  override def authorize(authObject: AuthorizeCommand, data: Option[JsObject]): Future[AuthUserId] = authObject match {
     case tokenObject: AuthByToken ⇒ for {
       identity ← retrieveUserIdentity(OAuth2Info(accessToken = tokenObject.token))
       userId ← getProfileId(identity, data)
@@ -20,13 +20,13 @@ abstract class OAuth2Provider(service: UserIdentitiesService)(implicit ec: Execu
     case _ ⇒ Future.failed(AuthError.WrongAuthObject)
   }
 
-  protected def getProfileId(identity: UserIdentity, data: Option[JsObject] = None): Future[AuthUserId] =
+  protected def getProfileId(identity: UserIdentity, data: Option[JsObject]): Future[AuthUserId] =
     storeIdentity(identity, data).map(_.userId).flatMap {
       case Some(userId) ⇒ Future.successful(userId)
       case _            ⇒ Future.failed(AuthError.UserIdNotFound)
     }
 
-  private def storeIdentity(newIdentity: UserIdentity, data: Option[JsObject] = None): Future[UserIdentity] =
+  private def storeIdentity(newIdentity: UserIdentity, data: Option[JsObject]): Future[UserIdentity] =
     service.find(newIdentity.identityId).flatMap {
       case Some(oldIdentity) ⇒ updateIdentity(oldIdentity, newIdentity)
       case None              ⇒ saveNewIdentity(newIdentity, data)
@@ -50,6 +50,6 @@ abstract class OAuth2Provider(service: UserIdentitiesService)(implicit ec: Execu
     ))
   }
 
-  private def saveNewIdentity(user: UserIdentity, data: Option[JsObject] = None): Future[UserIdentity] =
+  private def saveNewIdentity(user: UserIdentity, data: Option[JsObject]): Future[UserIdentity] =
     service.saveNewIdentityAndCreateNewUser(user, data)
 }

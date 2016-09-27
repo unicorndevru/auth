@@ -5,9 +5,9 @@ import scalariform.formatter.preferences._
 
 name := "auth"
 
-val authV = "0.4.0"
+val authV = "0.4.1"
 
-val akkaV = "2.4.8"
+val akkaV = "2.4.10"
 
 val reactiveMongoVersion = "0.11.9"
 
