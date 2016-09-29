@@ -52,7 +52,7 @@ lazy val `auth-akka` = (project in file("akka")).settings(commons: _*).settings(
     "org.mindrot" % "jbcrypt" % "0.3m",
     "commons-validator" % "commons-validator" % "1.5.0",
     "com.typesafe.akka" %% "akka-slf4j" % akkaV,
-    "ru.unicorndev" %% "utils-http" % "0.2.a69f6f0"
+    "ru.unicorndev" %% "utils-http" % "0.2.1a2cc15"
   )
 )
 
