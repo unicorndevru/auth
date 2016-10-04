@@ -1,5 +1,7 @@
 package auth.api
 
+import java.time.LocalDate
+
 import auth.protocol.AuthUserId
 import play.api.libs.json.JsObject
 
@@ -23,6 +25,7 @@ case class CreateUser(
   fullName:  Option[String],
   avatarUrl: Option[String],
   locale:    Option[String],
+  birthday:  Option[LocalDate],
   data:      Option[JsObject],
 
   email: Option[String]

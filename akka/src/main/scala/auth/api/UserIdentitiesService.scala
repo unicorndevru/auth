@@ -81,6 +81,7 @@ class DefaultUserIdentitiesService(dao: UserIdentitiesDao, service: AuthUsersSer
     fullName = user.fullName,
     avatarUrl = user.avatarUrl,
     locale = user.locale,
+    birthday = user.birthday,
     data = data,
     email = user.email
   ))
