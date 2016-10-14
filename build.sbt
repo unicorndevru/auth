@@ -7,7 +7,7 @@ name := "auth"
 
 val authV = "0.4.1"
 
-val akkaV = "2.4.10"
+val akkaV = "2.4.11"
 
 val reactiveMongoVersion = "0.11.9"
 

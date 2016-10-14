@@ -27,6 +27,8 @@ class PasswordChangeService(userIdentityService: UserIdentitiesService, password
           .foldLeft(false)((b, identity) ⇒ b || checkPassword(identity, oldPass)) match {
             case true ⇒
               Future.traverse(idsWithPassword)(setNewPassword(_, newPass))
+            case false if idsWithPassword.isEmpty && list.nonEmpty ⇒
+              createIdentityWithPassword(list.head, newPass).map(_ :: list)
             case false ⇒
               Future.failed(AuthError.WrongPassword)
           }
